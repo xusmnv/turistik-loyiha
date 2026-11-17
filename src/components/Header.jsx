@@ -1,6 +1,8 @@
 import React from 'react';
 import { PhoneCall, User, LogOut, Crown, LogIn, Send } from 'lucide-react';
 import { isUserAdmin } from '../services/auth';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSelector from './LanguageSelector';
 
 export default function Header({ 
   onOpenContact, 
@@ -9,40 +11,45 @@ export default function Header({
   onLogout
 }) {
   const isAdmin = isUserAdmin(currentUser);
+  const { t } = useLanguage();
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
       {/* Top micro banner */}
       <div className="bg-gradient-to-r from-blue-700 via-brand-600 to-indigo-700 text-white text-[11px] font-medium py-1 px-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 truncate">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             <span className="font-semibold text-emerald-300">USMWORLD CRM:</span>
-            <span className="truncate">Turizm agentligi faoliyatini avtomatlashtirish tizimi</span>
+            <span className="truncate">{t('crmSubtitle')}</span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Language Selector in Top Bar */}
+            <LanguageSelector compact={true} />
+
             {/* User status badge */}
             {currentUser ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {isAdmin ? (
                   <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold flex items-center gap-1 border border-amber-400/30 text-[10px]">
                     <Crown className="w-3 h-3 text-amber-400" />
-                    Bosh Administrator
+                    <span className="hidden xs:inline">{t('superAdmin')}</span>
+                    <span className="xs:hidden">Admin</span>
                   </span>
                 ) : (
-                  <span className="text-blue-100 flex items-center gap-1 text-[11px]">
-                    <User className="w-3 h-3 text-emerald-400" />
-                    {currentUser.name}
+                  <span className="text-blue-100 flex items-center gap-1 text-[11px] truncate max-w-[100px] sm:max-w-none">
+                    <User className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span className="truncate">{currentUser.name}</span>
                   </span>
                 )}
                 <button
                   onClick={onLogout}
                   className="text-slate-300 hover:text-white flex items-center gap-0.5 text-[10px] bg-slate-800/80 px-1.5 py-0.5 rounded transition"
-                  title="Chiqish"
+                  title={t('logout')}
                 >
                   <LogOut className="w-3 h-3" />
-                  <span className="hidden sm:inline">Chiqish</span>
+                  <span className="hidden sm:inline">{t('logout')}</span>
                 </button>
               </div>
             ) : (
@@ -51,7 +58,7 @@ export default function Header({
                 className="text-white hover:underline flex items-center gap-1 font-bold text-[10px] bg-white/20 px-2 py-0.5 rounded-full"
               >
                 <LogIn className="w-3 h-3" />
-                <span>Kirish</span>
+                <span>{t('login')}</span>
               </button>
             )}
 
@@ -60,7 +67,7 @@ export default function Header({
               href="https://t.me/xusmnv"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1 text-sky-200 hover:text-white font-semibold text-[10px] bg-sky-500/20 hover:bg-sky-500/30 px-2 py-0.5 rounded-full border border-sky-400/30 transition"
+              className="hidden md:flex items-center gap-1 text-sky-200 hover:text-white font-semibold text-[10px] bg-sky-500/20 hover:bg-sky-500/30 px-2 py-0.5 rounded-full border border-sky-400/30 transition"
               title="Telegram lichkaga yozish: @xusmnv"
             >
               <Send className="w-2.5 h-2.5 text-sky-300" />
@@ -71,10 +78,10 @@ export default function Header({
             <a 
               href="tel:+998990738859"
               className="flex items-center gap-1 text-emerald-200 hover:text-white font-semibold text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 px-2 py-0.5 rounded-full border border-emerald-400/30 transition"
-              title="Qo'ng'iroq qilish (mobil raqamga bog'lanadi)"
+              title="Qo'ng'iroq qilish"
             >
               <PhoneCall className="w-2.5 h-2.5 text-emerald-400" />
-              <span>Qo'ng'iroq</span>
+              <span>{t('call')}</span>
             </a>
           </div>
         </div>
@@ -117,8 +124,13 @@ export default function Header({
           </div>
         </div>
 
-        {/* Clean Contact Action Buttons (Number hidden, direct call & direct telegram) */}
+        {/* Clean Contact Action Buttons & Full Language Selector on desktop */}
         <div className="flex items-center gap-2">
+          {/* Full Language Selector for desktop */}
+          <div className="hidden sm:block">
+            <LanguageSelector compact={false} />
+          </div>
+
           {/* Telegram Lichka button */}
           <a
             href="https://t.me/xusmnv"
@@ -135,10 +147,10 @@ export default function Header({
           <a
             href="tel:+998990738859"
             className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl shadow-md shadow-emerald-600/20 transition active:scale-95"
-            title="Qo'ng'iroq qilish (operator bilan bog'lanish)"
+            title="Qo'ng'iroq qilish"
           >
             <PhoneCall className="w-3.5 h-3.5 animate-bounce-soft" />
-            <span>Qo'ng'iroq qilish</span>
+            <span>{t('callNow')}</span>
           </a>
         </div>
       </div>

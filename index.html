@@ -25,14 +25,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height: 100vh; background-color: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="font-size: 44px; margin-bottom: 14px;">✈️</div>
+        <div style="font-size: 20px; font-weight: bold; letter-spacing: 1px; color: #60a5fa;">USMWORLD</div>
+        <div style="font-size: 13px; color: #94a3b8; margin-top: 8px;">Yuklanmoqda...</div>
+      </div>
+    </div>
     <script type="module" src="./src/main.jsx"></script>
     <script>
-      // Service worker is only for real remote web servers, NEVER inside Capacitor Android app
-      if ('serviceWorker' in navigator && !window.Capacitor && window.location.protocol.startsWith('http') && window.location.hostname !== 'localhost') {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(function(e) {});
-        });
+      // Clear any leftover service workers and caches from previous versions to prevent blank white screen
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var reg of registrations) {
+            reg.unregister();
+          }
+        }).catch(function() {});
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var name of names) {
+            caches.delete(name);
+          }
+        }).catch(function() {});
       }
     </script>
   </body>

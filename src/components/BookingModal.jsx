@@ -8,9 +8,13 @@ import confetti from 'canvas-confetti';
 import { PAYMENT_METHODS } from '../data/mockData';
 import { createOrder } from '../services/db';
 import FaceScanner from './FaceScanner';
+import PhoneInput from './PhoneInput';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BookingModal({ tour, onClose, onSuccessOrder }) {
   if (!tour) return null;
+
+  const { t, effectiveLanguage } = useLanguage();
 
   // Step 1: Details, Step 2: Passport & Phone, Step 3: SMS Verification, Step 4: Face ID, Step 5: Payment method, Step 6: Pay, Step 7: Success
   const [step, setStep] = useState(1);
@@ -68,8 +72,12 @@ export default function BookingModal({ tour, onClose, onSuccessOrder }) {
   // Step 2 -> 3 (Validate passport and phone, trigger SMS)
   const handleProceedToSms = (e) => {
     e.preventDefault();
-    if (!customerName.trim() || !passportNumber.trim() || phone.length < 9) {
-      alert("Iltimos, ism, pasport va telefon raqamingizni to'liq kiriting!");
+    if (!customerName.trim() || !passportNumber.trim() || phone.replace(/\D/g, '').length < 6) {
+      alert(effectiveLanguage === 'ru' 
+        ? "Пожалуйста, введите имя, номер паспорта и номер телефона!" 
+        : effectiveLanguage === 'en' 
+        ? "Please enter your name, passport number and phone number!" 
+        : "Iltimos, ism, pasport va telefon raqamingizni to'liq kiriting!");
       return;
     }
     setStep(3);
@@ -177,15 +185,15 @@ export default function BookingModal({ tour, onClose, onSuccessOrder }) {
         {/* Step Progress Indicator */}
         {step < 7 && (
           <div className="px-4 py-2 bg-slate-800/40 border-b border-slate-800/80 flex items-center justify-between text-[11px] overflow-x-auto no-scrollbar">
-            <span className={step >= 1 ? "text-blue-400 font-bold" : "text-slate-500"}>1. Reja</span>
+            <span className={step >= 1 ? "text-blue-400 font-bold" : "text-slate-500"}>1. {t('step1Title')}</span>
             <span className="text-slate-600">→</span>
-            <span className={step >= 2 ? "text-blue-400 font-bold" : "text-slate-500"}>2. Pasport</span>
+            <span className={step >= 2 ? "text-blue-400 font-bold" : "text-slate-500"}>2. {t('step2Title')}</span>
             <span className="text-slate-600">→</span>
-            <span className={step >= 3 ? "text-blue-400 font-bold" : "text-slate-500"}>3. SMS Kod</span>
+            <span className={step >= 3 ? "text-blue-400 font-bold" : "text-slate-500"}>3. {t('step3Title')}</span>
             <span className="text-slate-600">→</span>
-            <span className={step >= 4 ? "text-blue-400 font-bold" : "text-slate-500"}>4. Face ID</span>
+            <span className={step >= 4 ? "text-blue-400 font-bold" : "text-slate-500"}>4. {t('step4Title')}</span>
             <span className="text-slate-600">→</span>
-            <span className={step >= 5 ? "text-blue-400 font-bold" : "text-slate-500"}>5. To'lov</span>
+            <span className={step >= 5 ? "text-blue-400 font-bold" : "text-slate-500"}>5. {t('step5Title')}</span>
           </div>
         )}
 
@@ -319,19 +327,14 @@ export default function BookingModal({ tour, onClose, onSuccessOrder }) {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Telefon raqam (SMS tasdiqlash kodi yuboriladi):
+                  {t('travelerPhone')}
                 </label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+998 90 123 45 67"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
-                  />
-                </div>
+                <PhoneInput
+                  value={phone}
+                  onChange={setPhone}
+                  placeholder="90 123 45 67"
+                  required
+                />
               </div>
 
               <div>

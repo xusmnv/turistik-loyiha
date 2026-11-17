@@ -20,8 +20,11 @@ import UpdateNotificationModal from './components/UpdateNotificationModal';
 
 import { getTours, getOrders, initializeDB } from './services/db';
 import { getCurrentUser, logoutUser, isUserAdmin } from './services/auth';
+import { useLanguage } from './context/LanguageContext';
 
 export default function App() {
+  const { t, effectiveLanguage } = useLanguage();
+
   // User Authentication state
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -76,7 +79,14 @@ export default function App() {
     setShowAuthModal(false);
   };
 
-  const categories = ['Barchasi', 'Ziyorat', 'Dengiz', 'Ekzotika', 'Shahar', 'Ichki'];
+  const categoryList = [
+    { id: 'Barchasi', label: t('catAll') },
+    { id: 'Ziyorat', label: t('catZiyorat') },
+    { id: 'Dengiz', label: t('catDengiz') },
+    { id: 'Ekzotika', label: t('catEkzotika') },
+    { id: 'Shahar', label: t('catShahar') },
+    { id: 'Ichki', label: t('catIchki') },
+  ];
 
   // Filtered & Sorted tours among 50+ tours
   const filteredTours = tours
@@ -203,17 +213,17 @@ export default function App() {
                   </button>
                 </div>
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {categories.map((cat) => (
+                  {categoryList.map((cat) => (
                     <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
                       className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${
-                        selectedCategory === cat
+                        selectedCategory === cat.id
                           ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                           : 'bg-slate-800/80 text-slate-400 hover:text-white border border-slate-700/60'
                       }`}
                     >
-                      {cat}
+                      {cat.label}
                     </button>
                   ))}
                 </div>
@@ -329,17 +339,17 @@ export default function App() {
 
                 {/* Categories */}
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pt-1">
-                  {categories.map((cat) => (
+                  {categoryList.map((cat) => (
                     <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
-                        selectedCategory === cat
+                        selectedCategory === cat.id
                           ? 'bg-blue-600 text-white'
                           : 'bg-slate-800 text-slate-400 hover:text-white'
                       }`}
                     >
-                      {cat}
+                      {cat.label}
                     </button>
                   ))}
                 </div>

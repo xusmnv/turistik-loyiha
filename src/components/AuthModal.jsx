@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { 
-  Plane, Globe, Compass, ShieldCheck, Mail, Lock, User, Phone, 
+  Plane, Globe, ShieldCheck, Mail, Lock, User, 
   Sparkles, CheckCircle2, ArrowRight, AlertCircle, X, KeyRound
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { loginUser, registerUser } from '../services/auth';
+import { useLanguage } from '../context/LanguageContext';
+import PhoneInput from './PhoneInput';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = false }) {
   if (!isOpen) return null;
 
+  const { t, effectiveLanguage } = useLanguage();
   const [mode, setMode] = useState('login'); // 'login' or 'register'
   
   // Login form
@@ -53,7 +56,22 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
         onAuthSuccess(res.user);
         onClose();
       } else {
-        setErrorMsg(res.error || "Elektron pochta yoki parol noto'g'ri kiritildi!");
+        // Localized error message
+        let msg = res.error;
+        if (res.error?.includes("ro'yxatdan o'tmagan")) {
+          msg = effectiveLanguage === 'ru' 
+            ? "Этот email не зарегистрирован! Пожалуйста, зарегистрируйтесь." 
+            : effectiveLanguage === 'en' 
+            ? "This email is not registered! Please register first." 
+            : "Bunday email ro'yxatdan o'tmagan! Iltimos, avval ro'yxatdan o'ting.";
+        } else if (res.error?.includes("parol xato")) {
+          msg = effectiveLanguage === 'ru' 
+            ? "Неверный email или пароль!" 
+            : effectiveLanguage === 'en' 
+            ? "Incorrect email or password!" 
+            : "Email yoki parol xato!";
+        }
+        setErrorMsg(msg);
       }
     }, 600);
   };
@@ -64,7 +82,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
     setErrorMsg('');
 
     if (regPassword.length < 6) {
-      setErrorMsg("Parol kamida 6 ta belgidan iborat bo'lishi kerak!");
+      setErrorMsg(t('errShortPass'));
+      return;
+    }
+
+    if (!regPhone || regPhone.trim().length < 6) {
+      setErrorMsg(effectiveLanguage === 'ru' 
+        ? "Пожалуйста, введите корректный номер телефона!" 
+        : effectiveLanguage === 'en' 
+        ? "Please enter a valid phone number!" 
+        : "Iltimos, telefon raqamingizni to'liq kiriting!");
       return;
     }
 
@@ -83,7 +110,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
         onAuthSuccess(res.user);
         onClose();
       } else {
-        setErrorMsg(res.error || "Ro'yxatdan o'tishda xatolik yuz berdi!");
+        setErrorMsg(res.error || t('errFillAll'));
       }
     }, 600);
   };
@@ -109,7 +136,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
 
         {/* Animated Flight Ticket Top Header */}
         <div className="relative bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 p-5 text-white overflow-hidden">
-          {/* Animated plane path line */}
           <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
           
           <div className="relative z-10 flex items-center justify-between">
@@ -143,7 +169,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
           <div className="mt-3 flex items-center justify-between text-xs text-blue-100 font-semibold border-t border-white/15 pt-2">
             <span className="flex items-center gap-1">
               <Globe className="w-3.5 h-3.5" />
-              Sizning shahringiz
+              {effectiveLanguage === 'ru' ? "Любой город мира" : effectiveLanguage === 'en' ? "Any City" : "Sizning shahringiz"}
             </span>
             <div className="flex items-center gap-1.5 text-blue-300">
               <span className="w-8 h-px bg-dashed border-b border-dashed border-blue-300"></span>
@@ -151,7 +177,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
               <span className="w-8 h-px bg-dashed border-b border-dashed border-blue-300"></span>
             </div>
             <span className="flex items-center gap-1 text-emerald-300">
-              Butun Dunyo 🌍
+              {effectiveLanguage === 'ru' ? "Весь Мир 🌍" : effectiveLanguage === 'en' ? "Worldwide 🌍" : "Butun Dunyo 🌍"}
             </span>
           </div>
         </div>
@@ -168,7 +194,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
             }`}
           >
             <KeyRound className="w-3.5 h-3.5" />
-            <span>Kirish (Login)</span>
+            <span>{t('tabLogin')}</span>
           </button>
 
           <button
@@ -181,7 +207,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
             }`}
           >
             <User className="w-3.5 h-3.5" />
-            <span>Ro'yxatdan O'tish</span>
+            <span>{t('tabRegister')}</span>
           </button>
         </div>
 
@@ -199,7 +225,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
             <form onSubmit={handleLoginSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Elektron pochta (Gmail / Email):
+                  {t('emailLabel')}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
@@ -216,7 +242,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Maxfiy parol:
+                  {t('passwordLabel')}
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
@@ -240,7 +266,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="rounded bg-slate-800 border-slate-700 text-blue-600 focus:ring-0"
                   />
-                  <span>Meni eslab qol</span>
+                  <span>{t('rememberMe')}</span>
                 </label>
               </div>
 
@@ -249,23 +275,23 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
                 disabled={loading}
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition active:scale-95"
               >
-                <span>{loading ? "Tekshirilmoqda..." : "Tizimga Kirish"}</span>
+                <span>{loading ? t('checking') : t('loginBtn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           ) : (
-            /* REGISTER FORM */
+            /* REGISTER FORM with International Phone Input */
             <form onSubmit={handleRegisterSubmit} className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  To'liq ism-familiyangiz:
+                  {t('fullNameLabel')}
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
                   <input
                     type="text"
                     required
-                    placeholder="Masalan: Sardor Aliyev"
+                    placeholder="Alisher Karimov"
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
@@ -275,7 +301,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Gmail / Elektron pochta:
+                  {t('emailLabel')}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
@@ -290,33 +316,29 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
                 </div>
               </div>
 
+              {/* Worldwide Phone Input */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Telefon raqam:
+                  {t('phoneLabel')}
                 </label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+998 90 123 45 67"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
-                  />
-                </div>
+                <PhoneInput
+                  value={regPhone}
+                  onChange={setRegPhone}
+                  placeholder="90 123 45 67"
+                  required
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Yangi parol o'ylab toping:
+                  {t('newPasswordLabel')}
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
                   <input
                     type="password"
                     required
-                    placeholder="Kamida 6 ta belgi"
+                    placeholder="••••••••"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
@@ -329,7 +351,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
                 disabled={loading}
                 className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition active:scale-95"
               >
-                <span>{loading ? "Yaratilmoqda..." : "Akkaunt Ochish va Kirish"}</span>
+                <span>{loading ? t('creating') : t('registerBtn')}</span>
                 <CheckCircle2 className="w-4 h-4" />
               </button>
             </form>
@@ -342,7 +364,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, forceAuth = 
               onClick={onClose}
               className="text-xs text-slate-400 hover:text-slate-200 transition underline"
             >
-              Hozircha ro'yxatdan o'tmasdan ko'rish (Mehmon rejimi)
+              {t('guestMode')}
             </button>
           </div>
         </div>

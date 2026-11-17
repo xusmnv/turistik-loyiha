@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { X, Star, MapPin, Clock, Plane, Calendar, CheckCircle2, ShieldCheck, Utensils, Hotel, ArrowRight, Share2, Flame } from 'lucide-react';
+import { X, Star, MapPin, Clock, Plane, Calendar, CheckCircle2, ShieldCheck, Utensils, Hotel, ArrowRight, Flame } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function TourDetailModal({ tour, onClose, onBook }) {
   if (!tour) return null;
 
+  const { t, effectiveLanguage } = useLanguage();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const images = tour.gallery && tour.gallery.length ? tour.gallery : [tour.image];
   const numPrice = Number(tour?.price) || 0;
@@ -22,9 +24,18 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
       const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
       const d = new Date(targetTime);
       const day = d.getDate();
-      const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
-      const monthName = months[d.getMonth()] || '';
-      return `${days} kun qoldi (${day}-${monthName}gacha)`;
+      const monthIndex = d.getMonth();
+
+      if (effectiveLanguage === 'ru') {
+        const ruMonths = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        return `Осталось ${days} дн. (до ${day} ${ruMonths[monthIndex]})`;
+      }
+      if (effectiveLanguage === 'en') {
+        const enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${days} days left (until ${enMonths[monthIndex]} ${day})`;
+      }
+      const uzMonths = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+      return `${days} kun qoldi (${day}-${uzMonths[monthIndex]}gacha)`;
     } catch (e) {
       return null;
     }
@@ -63,12 +74,12 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
               {tour.discountPercent > 0 && (
                 <span className="px-3 py-1 bg-gradient-to-r from-rose-600 to-amber-500 text-white text-xs font-black rounded-lg shadow flex items-center gap-1 animate-pulse">
                   <Flame className="w-3.5 h-3.5 fill-white" />
-                  -{tour.discountPercent}% CHEGIRMA
+                  -{tour.discountPercent}% {t('discount').toUpperCase()}
                 </span>
               )}
               <span className="px-2.5 py-1 bg-slate-900/80 backdrop-blur-md text-amber-400 text-xs font-semibold rounded-lg flex items-center gap-1 border border-white/10">
                 <Star className="w-3.5 h-3.5 fill-amber-400" />
-                {tour.rating} ({tour.reviewsCount} sharh)
+                {tour.rating} ({tour.reviewsCount})
               </span>
             </div>
 
@@ -85,13 +96,13 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
 
           {/* Gallery Thumbnails */}
           {images.length > 1 && (
-            <div className="flex gap-2 p-3 bg-slate-900/90 overflow-x-auto no-scrollbar border-b border-slate-800">
+            <div className="p-3 bg-slate-950 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-800">
               {images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImageIndex(idx)}
                   className={`w-16 h-12 rounded-lg overflow-hidden shrink-0 border-2 transition ${
-                    activeImageIndex === idx ? 'border-blue-500 scale-105' : 'border-slate-700 opacity-60'
+                    activeImageIndex === idx ? 'border-blue-500 scale-105' : 'border-transparent opacity-60'
                   }`}
                 >
                   <img src={img} alt="" className="w-full h-full object-cover" />
@@ -101,82 +112,57 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
           )}
 
           {/* Body Information */}
-          <div className="p-4 sm:p-6 space-y-6">
-            {/* Quick Details Chips */}
+          <div className="p-5 space-y-5">
+            {/* Quick Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <div className="text-[10px] text-slate-400">Davomiyligi</div>
-                <div className="text-xs font-bold text-slate-200 flex items-center gap-1 mt-0.5">
-                  <Clock className="w-3.5 h-3.5 text-blue-400" />
-                  {tour.duration}
-                </div>
+                <Clock className="w-4 h-4 text-blue-400 mb-1" />
+                <div className="text-[10px] text-slate-400">{t('days')}:</div>
+                <div className="text-xs font-bold text-white">{tour.duration}</div>
               </div>
               <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <div className="text-[10px] text-slate-400">Mehmonxona</div>
-                <div className="text-xs font-bold text-slate-200 flex items-center gap-1 mt-0.5">
-                  <Hotel className="w-3.5 h-3.5 text-amber-400" />
-                  {tour.hotelStars}★ {tour.hotelName?.split(' ')[0]}
-                </div>
+                <Plane className="w-4 h-4 text-emerald-400 mb-1" />
+                <div className="text-[10px] text-slate-400">Avia:</div>
+                <div className="text-xs font-bold text-white truncate">{tour.flightInfo?.split('(')[0] || 'Parvoz'}</div>
               </div>
               <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <div className="text-[10px] text-slate-400">Ovqatlanish</div>
-                <div className="text-xs font-bold text-slate-200 flex items-center gap-1 mt-0.5 truncate">
-                  <Utensils className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="truncate">{tour.foodType}</span>
-                </div>
+                <Hotel className="w-4 h-4 text-amber-400 mb-1" />
+                <div className="text-[10px] text-slate-400">Mehmonxona:</div>
+                <div className="text-xs font-bold text-white truncate">{tour.hotel || '4-5★ Lux'}</div>
               </div>
               <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
-                <div className="text-[10px] text-slate-400">Parvoz turi</div>
-                <div className="text-xs font-bold text-slate-200 flex items-center gap-1 mt-0.5 truncate">
-                  <Plane className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span className="truncate">To'g'ridan-to'g'ri</span>
-                </div>
+                <Utensils className="w-4 h-4 text-purple-400 mb-1" />
+                <div className="text-[10px] text-slate-400">Taom:</div>
+                <div className="text-xs font-bold text-white truncate">{tour.mealPlan || 'All Inclusive'}</div>
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <h4 className="text-sm font-bold text-white mb-2">Tur haqida ma'lumot</h4>
-              <p className="text-sm text-slate-300 leading-relaxed">
+              <h4 className="text-sm font-bold text-white mb-1.5">Tur haqida to'liq ma'lumot:</h4>
+              <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
                 {tour.description}
               </p>
             </div>
 
-            {/* Flight info */}
-            {tour.flightInfo && (
-              <div className="bg-blue-950/40 border border-blue-800/40 p-3 rounded-xl flex items-start gap-2.5">
-                <Plane className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                <div className="text-xs">
-                  <span className="font-semibold text-blue-200">Reys ma'lumoti: </span>
-                  <span className="text-slate-300">{tour.flightInfo}</span>
-                </div>
-              </div>
-            )}
-
-            {/* What's included */}
+            {/* What's Included */}
             <div>
-              <h4 className="text-sm font-bold text-white mb-2.5 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Narxga kiritilgan xizmatlar:
-              </h4>
+              <h4 className="text-sm font-bold text-white mb-2">{t('allInclusive')}:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {tour.includes?.map((inc, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs text-slate-300 bg-slate-800/40 p-2 rounded-lg">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                {tour.included?.map((inc, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-xs text-slate-200 bg-slate-800/40 p-2 rounded-lg border border-slate-700/40">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>{inc}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Itinerary (Daily program) */}
+            {/* Itinerary */}
             {tour.itinerary && tour.itinerary.length > 0 && (
               <div>
-                <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-blue-400" />
-                  Kunlik sayohat dasturi:
-                </h4>
-                <div className="space-y-3 relative before:absolute before:inset-0 before:left-3 before:w-0.5 before:bg-slate-800">
+                <h4 className="text-sm font-bold text-white mb-3">Sayohat dasturi kunbay:</h4>
+                <div className="space-y-3 relative before:absolute before:inset-0 before:left-2.5 before:w-0.5 before:bg-slate-800">
                   {tour.itinerary.map((item, idx) => (
                     <div key={idx} className="relative flex items-start gap-3 pl-1">
                       <div className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 z-10">
@@ -214,7 +200,7 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
         <div className="absolute bottom-0 inset-x-0 p-4 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 flex items-center justify-between gap-4 z-30">
           <div>
             <div className="text-[11px] text-slate-400">
-              {tour.discountPercent > 0 ? "Chegirmali umumiy narx:" : "Umumiy narx:"}
+              {tour.discountPercent > 0 ? `${t('discount')} Narx:` : "Umumiy narx:"}
             </div>
             <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="text-2xl font-black text-white">${numPrice.toLocaleString()}</span>
@@ -227,7 +213,7 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
             </div>
             {remainingText && (
               <div className="text-[10px] text-amber-400 font-semibold mt-0.5">
-                ⏳ Chegirma muddati: {remainingText}
+                ⏳ {remainingText}
               </div>
             )}
           </div>
@@ -239,7 +225,7 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
             }}
             className="flex-1 max-w-xs py-3 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition active:scale-95"
           >
-            <span>Bron qilish va To'lash</span>
+            <span>{t('bookNow')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

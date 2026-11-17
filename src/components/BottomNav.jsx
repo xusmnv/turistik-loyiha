@@ -1,13 +1,16 @@
 import React from 'react';
 import { Home, Compass, Ticket, LayoutDashboard, MessageCircleQuestion } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BottomNav({ activeTab, setActiveTab, ordersCount = 0 }) {
+  const { t } = useLanguage();
+
   const navItems = [
-    { id: 'home', label: 'Asosiy', icon: Home },
-    { id: 'catalog', label: 'Turlar', icon: Compass },
-    { id: 'orders', label: 'Chiptalar', icon: Ticket, badge: ordersCount > 0 ? ordersCount : null },
-    { id: 'admin', label: 'Agentlik CRM', icon: LayoutDashboard, isAccent: true },
-    { id: 'contact', label: 'Aloqa', icon: MessageCircleQuestion },
+    { id: 'home', label: t('navHome'), icon: Home },
+    { id: 'catalog', label: t('navTours'), icon: Compass },
+    { id: 'orders', label: t('navTickets'), icon: Ticket, badge: ordersCount > 0 ? ordersCount : null },
+    { id: 'admin', label: t('navCrm'), icon: LayoutDashboard, isAccent: true },
+    { id: 'contact', label: t('navContact'), icon: MessageCircleQuestion },
   ];
 
   return (

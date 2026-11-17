@@ -1,0 +1,16 @@
+{
+  "short_name": "USMWORLD",
+  "name": "USMWORLD - Turistik Agentlik & Sayohatlar",
+  "icons": [
+    {
+      "src": "/USMWORLD.png",
+      "type": "image/png",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "display": "standalone",
+  "orientation": "portrait"
+}

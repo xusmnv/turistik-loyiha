@@ -1,0 +1,9 @@
+{
+  "appId": "com.usmworld.travel",
+  "appName": "USMWORLD",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

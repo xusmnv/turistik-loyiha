@@ -3,11 +3,13 @@ import {
   LayoutDashboard, Users, DollarSign, PackageCheck, AlertCircle, Plus, 
   Trash2, CheckCircle2, XCircle, Clock, RefreshCw, Download, Search,
   Eye, Plane, ShieldAlert, Sparkles, Filter, Edit3, Save, Lock, Crown, ArrowRight,
-  Upload, Scissors, Camera, UserCheck, Check, X
+  Upload, Scissors, Camera, UserCheck, Check, X, Flame, MessageSquare, Tag, Calendar, Phone, Send
 } from 'lucide-react';
 import { 
   getOrders, getTours, getAgencyStats, updateOrderStatus, 
-  createTour, deleteTour, updateTourPrice, resetDatabase 
+  createTour, deleteTour, updateTourPrice, resetDatabase,
+  getFeedbacks, deleteFeedback, updateFeedbackStatus,
+  applyTourDiscount, removeTourDiscount
 } from '../services/db';
 import { isUserAdmin, loginUser } from '../services/auth';
 import ImageUploadCropper from './ImageUploadCropper';
@@ -22,14 +24,21 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
   const [authLoading, setAuthLoading] = useState(false);
 
   // Admin Dashboard states
-  const [activeTab, setActiveTab] = useState('tours'); // 'tours', 'orders', 'buyers', 'addTour'
+  const [activeTab, setActiveTab] = useState('tours'); // 'tours', 'orders', 'buyers', 'feedbacks', 'addTour'
   const [orders, setOrders] = useState(getOrders());
   const [tours, setTours] = useState(getTours());
+  const [feedbacks, setFeedbacks] = useState(getFeedbacks());
   const [stats, setStats] = useState(getAgencyStats());
   const [searchQuery, setSearchQuery] = useState('');
   const [tourSearchQuery, setTourSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [feedbackFilter, setFeedbackFilter] = useState('all');
   const [previewPhoto, setPreviewPhoto] = useState(null);
+
+  // Tour Discount Modal state
+  const [discountModalTour, setDiscountModalTour] = useState(null);
+  const [discountPercent, setDiscountPercent] = useState('90');
+  const [discountDays, setDiscountDays] = useState('5');
 
   // Buyers calculations
   const totalPaidOrders = orders.filter(o => o.paymentStatus === 'paid');
@@ -62,6 +71,7 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
     setOrders(getOrders());
     setTours(getTours());
     setStats(getAgencyStats());
+    setFeedbacks(getFeedbacks());
     if (onDataChanged) onDataChanged();
   };
 
@@ -97,6 +107,56 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
     updateTourPrice(tourId, Number(tempPrice));
     setEditingPriceTourId(null);
     refreshAllData();
+  };
+
+  // Discount modal open
+  const handleOpenDiscountModal = (tour) => {
+    setDiscountModalTour(tour);
+    setDiscountPercent(tour.discountPercent > 0 ? String(tour.discountPercent) : '90');
+    setDiscountDays(tour.discountDays ? String(tour.discountDays) : '5');
+  };
+
+  // Save tour discount (e.g. 90% discount for 5 days)
+  const handleApplyDiscount = (e) => {
+    e.preventDefault();
+    if (!discountModalTour) return;
+    const pct = Number(discountPercent);
+    const days = Number(discountDays);
+    if (!pct || pct <= 0 || pct >= 100) {
+      alert("Chegirma foizi 1 dan 99 gacha bo'lishi kerak!");
+      return;
+    }
+    if (!days || days <= 0) {
+      alert("Amal qilish muddati kamida 1 kun bo'lishi kerak!");
+      return;
+    }
+
+    applyTourDiscount(discountModalTour.id, pct, days);
+    setDiscountModalTour(null);
+    refreshAllData();
+    alert(`"${discountModalTour.title}" turiga ${pct}% chegirma ${days} kunga muvaffaqiyatli belgilandi!`);
+  };
+
+  // Remove discount from tour
+  const handleRemoveDiscount = (tourId) => {
+    if (window.confirm("Haqiqatan ham chegirmani olib tashlab, asl narxini tiklamoqchimisiz?")) {
+      removeTourDiscount(tourId);
+      setDiscountModalTour(null);
+      refreshAllData();
+    }
+  };
+
+  // Feedback actions
+  const handleDeleteFeedback = (id) => {
+    if (window.confirm("Ushbu murojaatni o'chirmoqchimisiz?")) {
+      deleteFeedback(id);
+      setFeedbacks(getFeedbacks());
+    }
+  };
+
+  const handleMarkFeedbackRead = (id) => {
+    updateFeedbackStatus(id, 'read');
+    setFeedbacks(getFeedbacks());
   };
 
   // Status changes
@@ -417,6 +477,21 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
         </button>
 
         <button
+          onClick={() => setActiveTab('feedbacks')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'feedbacks'
+              ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
+              : 'bg-slate-800/60 text-slate-400 hover:text-white'
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Shikoyat & Takliflar ({feedbacks.length})</span>
+          {feedbacks.filter(f => f.status === 'new').length > 0 && (
+            <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
+          )}
+        </button>
+
+        <button
           onClick={() => setActiveTab('addTour')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
             activeTab === 'addTour'
@@ -523,6 +598,20 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      {/* Chegirma Button */}
+                      <button
+                        onClick={() => handleOpenDiscountModal(t)}
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                          t.discountPercent > 0
+                            ? 'bg-rose-500/25 text-rose-300 border border-rose-500/40 hover:bg-rose-500/40'
+                            : 'bg-slate-800 text-slate-300 hover:text-rose-400 border border-slate-700'
+                        }`}
+                        title="Chegirma belgilash / muddati"
+                      >
+                        <Flame className="w-3.5 h-3.5 text-rose-400" />
+                        <span>{t.discountPercent > 0 ? `-${t.discountPercent}%` : "Chegirma"}</span>
+                      </button>
+
                       {!isEditing && (
                         <button
                           onClick={() => handleStartEditPrice(t)}
@@ -530,7 +619,7 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
                           title="Narxni o'zgartirish"
                         >
                           <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Narxni o'zgartirish</span>
+                          <span>Narx</span>
                         </button>
                       )}
 
@@ -843,6 +932,133 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
         </div>
       )}
 
+      {/* TAB: SHIKOYAT VA TAKLIFLAR (FEEDBACKS & COMPLAINTS) */}
+      {activeTab === 'feedbacks' && (
+        <div className="space-y-4">
+          <div className="bg-amber-950/20 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div>
+              <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-300 font-bold rounded-full uppercase text-[10px] tracking-wider">
+                Mijozlar Fikrlari & Murojaatlari
+              </span>
+              <h3 className="text-base font-extrabold text-white mt-1">
+                Shikoyat, Taklif va Savollar Bazasi ({feedbacks.length} ta)
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Mijozlar dastur orqali yozib qoldirgan barcha fikrlar, shikoyatlar va takliflar ushbu bo'limda yig'iladi.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0 text-xs">
+              <button
+                onClick={() => setFeedbackFilter('all')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                  feedbackFilter === 'all' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Barchasi ({feedbacks.length})
+              </button>
+              <button
+                onClick={() => setFeedbackFilter('new')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                  feedbackFilter === 'new' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Yangi ({feedbacks.filter(f => f.status === 'new').length})
+              </button>
+            </div>
+          </div>
+
+          {feedbacks.length === 0 ? (
+            <div className="text-center py-12 bg-slate-900/50 rounded-2xl border border-slate-800">
+              <MessageSquare className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+              <p className="text-sm text-slate-400">Hozircha shikoyat yoki takliflar kelib tushmagan</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {feedbacks
+                .filter(f => feedbackFilter === 'all' || f.status === feedbackFilter)
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className={`bg-slate-900/90 rounded-2xl p-4 border transition flex flex-col sm:flex-row sm:items-start justify-between gap-4 shadow-sm ${
+                      item.status === 'new' ? 'border-amber-500/40 bg-slate-900' : 'border-slate-800'
+                    }`}
+                  >
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg uppercase tracking-wider ${
+                          item.type === 'Shikoyat'
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            : item.type === 'Taklif'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        }`}>
+                          {item.type}
+                        </span>
+
+                        {item.status === 'new' ? (
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg animate-pulse">
+                            Yangi
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-800 text-slate-400 rounded-lg">
+                            O'qilgan
+                          </span>
+                        )}
+
+                        <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(item.createdAt).toLocaleString('uz-UZ')}
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 text-xs text-slate-200 leading-relaxed font-sans">
+                        "{item.message}"
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs text-slate-400">
+                        <div>
+                          Mijoz: <b className="text-white">{item.name}</b>
+                        </div>
+                        {item.phone && (
+                          <a
+                            href={`tel:${item.phone.replace(/\s+/g, '')}`}
+                            className="text-emerald-400 hover:underline flex items-center gap-1 font-mono font-bold"
+                            title="Mijozga qo'ng'iroq qilish"
+                          >
+                            <Phone className="w-3 h-3" />
+                            {item.phone}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex sm:flex-col items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                      {item.status === 'new' && (
+                        <button
+                          onClick={() => handleMarkFeedbackRead(item.id)}
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl flex items-center gap-1 transition"
+                          title="O'qildi deb belgilash"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>O'qildi</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteFeedback(item.id)}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-rose-950/50 text-slate-400 hover:text-rose-300 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-1"
+                        title="O'chirish"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>O'chirish</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* TAB 4: ADD NEW TOUR FORM WITH DEVICE IMAGE UPLOAD & CROP */}
       {activeTab === 'addTour' && (
         <form onSubmit={handleAddTourSubmit} className="bg-slate-900 p-5 rounded-3xl border border-slate-800 space-y-4 max-w-2xl">
@@ -1014,6 +1230,165 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
             >
               Yopish
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tour Discount Management Modal */}
+      {discountModalTour && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative bg-slate-900 border border-rose-500/50 rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4">
+            <button
+              onClick={() => setDiscountModalTour(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+                <Flame className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-base font-bold text-white leading-tight">Turga Chegirma Belgilash</h4>
+                <p className="text-xs text-slate-400 truncate max-w-xs">{discountModalTour.title}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleApplyDiscount} className="space-y-3.5">
+              {/* Tour current pricing info */}
+              <div className="bg-slate-800/60 p-3 rounded-2xl border border-slate-700/60 flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-slate-400 block text-[10px]">Asl narxi:</span>
+                  <span className="text-sm font-bold text-white">${discountModalTour.originalPrice || discountModalTour.oldPrice || discountModalTour.price}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-400 block text-[10px]">Hozirgi narxi:</span>
+                  <span className="text-sm font-bold text-emerald-400">${discountModalTour.price}</span>
+                </div>
+              </div>
+
+              {/* Discount Percentage */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span>Chegirma foizi (%):</span>
+                  <span className="text-rose-400 font-bold">-{discountPercent}%</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    required
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(e.target.value)}
+                    className="w-20 bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold text-center focus:outline-none focus:border-rose-500"
+                  />
+                  {/* Preset quick buttons */}
+                  <div className="flex items-center gap-1.5 flex-1 overflow-x-auto no-scrollbar">
+                    {['20', '30', '50', '70', '90'].map((p) => (
+                      <button
+                        type="button"
+                        key={p}
+                        onClick={() => setDiscountPercent(p)}
+                        className={`px-2 py-1.5 rounded-lg text-xs font-bold transition shrink-0 ${
+                          discountPercent === p
+                            ? 'bg-rose-600 text-white'
+                            : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                        }`}
+                      >
+                        -{p}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Duration in Days */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                  <span>Amal qilish muddati (kun):</span>
+                  <span className="text-amber-400 font-bold">{discountDays} kun davomida</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    required
+                    value={discountDays}
+                    onChange={(e) => setDiscountDays(e.target.value)}
+                    className="w-20 bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-bold text-center focus:outline-none focus:border-rose-500"
+                  />
+                  {/* Preset quick days */}
+                  <div className="flex items-center gap-1.5 flex-1">
+                    {['3', '5', '7', '14', '30'].map((d) => (
+                      <button
+                        type="button"
+                        key={d}
+                        onClick={() => setDiscountDays(d)}
+                        className={`px-2 py-1.5 rounded-lg text-xs font-bold transition shrink-0 ${
+                          discountDays === d
+                            ? 'bg-amber-600 text-white'
+                            : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                        }`}
+                      >
+                        {d}k
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Preview Box */}
+              {(() => {
+                const orig = discountModalTour.originalPrice || discountModalTour.oldPrice || discountModalTour.price;
+                const pct = Number(discountPercent) || 0;
+                const discounted = Math.max(1, Math.round(orig * (1 - pct / 100)));
+                const save = orig - discounted;
+                const days = Number(discountDays) || 5;
+                const expiryDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' });
+
+                return (
+                  <div className="bg-rose-950/30 border border-rose-500/40 p-3 rounded-2xl space-y-1 text-xs text-rose-200">
+                    <div className="flex items-center justify-between">
+                      <span>Mijozlar ko'radigan yangi narx:</span>
+                      <span className="text-base font-black text-emerald-400">${discounted}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-300">
+                      <span>Asl narxdan tejamkorlik:</span>
+                      <span className="font-bold text-rose-400">-${save} ({pct}%)</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-amber-300 pt-1 border-t border-rose-900/40">
+                      <span>Tugash sanasi:</span>
+                      <span className="font-bold">{expiryDate}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 pt-0.5 leading-tight">
+                      ℹ️ Chegirma muddati server/kod yangilansa ham to'xtamaydi, saqlanadi.
+                    </p>
+                  </div>
+                );
+              })()}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-900/40 transition active:scale-95"
+                >
+                  Chegirmani E'lon Qilish
+                </button>
+
+                {discountModalTour.discountPercent > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDiscount(discountModalTour.id)}
+                    className="px-3 py-2.5 bg-slate-800 hover:bg-rose-950/60 text-rose-300 text-xs font-bold rounded-xl border border-slate-700 transition"
+                  >
+                    Chegirmani O'chirish
+                  </button>
+                )}
+              </div>
+            </form>
           </div>
         </div>
       )}

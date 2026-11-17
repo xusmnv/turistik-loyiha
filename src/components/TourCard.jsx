@@ -5,6 +5,18 @@ export default function TourCard({ tour, onSelect, onBook }) {
   const uzsRate = 12900; // 1 USD = 12,900 UZS
   const priceInUzs = Math.round((tour.price * uzsRate)).toLocaleString('uz-UZ');
 
+  // Calculate discount remaining time
+  const getRemainingDiscountText = () => {
+    if (!tour.discountUntil || !tour.discountPercent) return null;
+    const diffMs = new Date(tour.discountUntil).getTime() - Date.now();
+    if (diffMs <= 0) return null;
+    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const untilDate = new Date(tour.discountUntil).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' });
+    return `${days} kun qoldi (${untilDate}gacha)`;
+  };
+
+  const remainingText = getRemainingDiscountText();
+
   return (
     <div className="group relative bg-slate-900/80 rounded-2xl overflow-hidden border border-slate-800/80 hover:border-blue-500/50 transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-blue-500/10 flex flex-col">
       {/* Image container */}
@@ -18,14 +30,21 @@ export default function TourCard({ tour, onSelect, onBook }) {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
 
         {/* Category & Badge */}
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
-          <span className="px-2.5 py-1 text-[11px] font-bold bg-blue-600/90 backdrop-blur-md text-white rounded-lg shadow-sm">
-            {tour.category}
-          </span>
-          {tour.discountPercent > 0 && (
-            <span className="px-2 py-1 text-[11px] font-bold bg-rose-500/95 backdrop-blur-md text-white rounded-lg flex items-center gap-1 shadow-sm">
-              <Flame className="w-3 h-3 fill-white" />
-              -{tour.discountPercent}% Chegirma
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="px-2.5 py-1 text-[11px] font-bold bg-blue-600/90 backdrop-blur-md text-white rounded-lg shadow-sm">
+              {tour.category}
+            </span>
+            {tour.discountPercent > 0 && (
+              <span className="px-2 py-1 text-[11px] font-extrabold bg-gradient-to-r from-rose-600 to-amber-500 text-white rounded-lg flex items-center gap-1 shadow-md shadow-rose-900/40 animate-pulse">
+                <Flame className="w-3 h-3 fill-white" />
+                -{tour.discountPercent}% CHEGIRMA
+              </span>
+            )}
+          </div>
+          {remainingText && (
+            <span className="px-2 py-0.5 text-[9px] font-bold bg-slate-950/90 backdrop-blur-md text-amber-300 rounded border border-amber-500/40">
+              ⏳ {remainingText}
             </span>
           )}
         </div>
@@ -84,20 +103,27 @@ export default function TourCard({ tour, onSelect, onBook }) {
         {/* Pricing and Action */}
         <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
           <div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Tur narxi:</div>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider">
+              {tour.discountPercent > 0 ? "Chegirmali Narx:" : "Tur narxi:"}
+            </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-lg font-black text-white">
                 ${tour.price.toLocaleString()}
               </span>
               {tour.oldPrice && (
-                <span className="text-xs text-slate-500 line-through">
-                  ${tour.oldPrice}
+                <span className="text-xs text-rose-400 font-bold line-through decoration-rose-500 decoration-2">
+                  ${tour.oldPrice.toLocaleString()}
                 </span>
               )}
             </div>
             <div className="text-[10px] text-blue-400 font-medium">
               ≈ {priceInUzs} so'm
             </div>
+            {remainingText && (
+              <div className="text-[9px] text-amber-400 font-semibold mt-0.5">
+                ⏳ {remainingText}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5">

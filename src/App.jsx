@@ -22,9 +22,6 @@ import { getTours, getOrders, initializeDB } from './services/db';
 import { getCurrentUser, logoutUser, isUserAdmin } from './services/auth';
 
 export default function App() {
-  // Mobile / desktop simulation mode
-  const [isMobileView, setIsMobileView] = useState(false);
-
   // User Authentication state
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -101,14 +98,11 @@ export default function App() {
   const isAdmin = isUserAdmin(currentUser);
 
   return (
-    <MobileFrame isMobileView={isMobileView} setIsMobileView={setIsMobileView}>
+    <div className="min-h-screen bg-slate-950">
       <div className="flex flex-col min-h-full bg-slate-950 text-slate-100 pb-20 selection:bg-blue-600 selection:text-white">
         
         {/* Main Header with User state */}
         <Header 
-          isMobileView={isMobileView}
-          setIsMobileView={setIsMobileView}
-          onOpenInstall={() => setShowInstallModal(true)}
           onOpenContact={() => setShowContactModal(true)}
           currentUser={currentUser}
           onOpenAuth={() => setShowAuthModal(true)}
@@ -551,6 +545,6 @@ export default function App() {
         <UpdateNotificationModal />
 
       </div>
-    </MobileFrame>
+    </div>
   );
 }

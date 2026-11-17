@@ -3,8 +3,30 @@ import { INITIAL_TOURS, INITIAL_ORDERS } from '../data/mockData';
 const STORAGE_KEYS = {
   TOURS: 'usmworld_tours',
   ORDERS: 'usmworld_orders',
+  FEEDBACKS: 'usmworld_feedbacks',
   SETTINGS: 'usmworld_settings'
 };
+
+const INITIAL_FEEDBACKS = [
+  {
+    id: 'fb-1',
+    name: 'Sardor Rahimiy',
+    phone: '+998 93 111 22 33',
+    type: 'Taklif',
+    message: 'Dubay turiga qishki ta\'tillar uchun oilaviy chegirmalar qo\'shsangiz ajoyib bo\'lardi.',
+    createdAt: '2026-11-16T10:30:00Z',
+    status: 'new'
+  },
+  {
+    id: 'fb-2',
+    name: 'Ziyoda Karimova',
+    phone: '+998 90 555 44 33',
+    type: 'Shikoyat',
+    message: 'Mehmonxonaga joylashishda transfer 15 daqiqa kechikdi, ammo keyin gid juda chiroyli xizmat ko\'rsatdi.',
+    createdAt: '2026-11-17T08:15:00Z',
+    status: 'new'
+  }
+];
 
 // Initialize localStorage if empty or outdated (update to 50+ tours)
 export const initializeDB = () => {
@@ -71,11 +93,67 @@ export const updateTourPrice = (tourId, newPrice) => {
       return {
         ...t,
         price: priceNum,
+        originalPrice: priceNum,
         oldPrice: t.price !== priceNum ? t.price : t.oldPrice
       };
     }
     return t;
   });
+  localStorage.setItem(STORAGE_KEYS.TOURS, JSON.stringify(updated));
+  return true;
+};
+
+// Apply custom discount to a specific tour (Admin privilege)
+// e.g. 90% discount for 5 days. Even if app is modified in 3 days, discountUntil timestamp remains valid.
+export const applyTourDiscount = (tourId, discountPercent, durationDays = 5) => {
+  const tours = getTours();
+  const pct = Number(discountPercent);
+  const days = Number(durationDays) || 5;
+
+  const updated = tours.map(t => {
+    if (t.id === tourId) {
+      const origPrice = t.originalPrice || t.oldPrice || t.price;
+      const discounted = Math.max(1, Math.round(origPrice * (1 - pct / 100)));
+      const discountUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+      return {
+        ...t,
+        originalPrice: origPrice,
+        oldPrice: origPrice,
+        price: discounted,
+        discountPercent: pct,
+        discountUntil: discountUntil,
+        discountDays: days,
+        discountStartedAt: new Date().toISOString()
+      };
+    }
+    return t;
+  });
+
+  localStorage.setItem(STORAGE_KEYS.TOURS, JSON.stringify(updated));
+  return true;
+};
+
+// Remove discount and restore original tour price
+export const removeTourDiscount = (tourId) => {
+  const tours = getTours();
+  const updated = tours.map(t => {
+    if (t.id === tourId) {
+      const origPrice = t.originalPrice || t.oldPrice || t.price;
+      return {
+        ...t,
+        price: origPrice,
+        oldPrice: null,
+        originalPrice: origPrice,
+        discountPercent: 0,
+        discountUntil: null,
+        discountDays: null,
+        discountStartedAt: null
+      };
+    }
+    return t;
+  });
+
   localStorage.setItem(STORAGE_KEYS.TOURS, JSON.stringify(updated));
   return true;
 };
@@ -192,4 +270,49 @@ export const getAgencyStats = () => {
 export const resetDatabase = () => {
   localStorage.setItem(STORAGE_KEYS.TOURS, JSON.stringify(INITIAL_TOURS));
   localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_ORDERS));
+  localStorage.setItem(STORAGE_KEYS.FEEDBACKS, JSON.stringify(INITIAL_FEEDBACKS));
+};
+
+// --- FEEDBACKS & COMPLAINTS (SHIKOYAT VA TAKLIFLAR) ---
+export const getFeedbacks = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.FEEDBACKS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.FEEDBACKS, JSON.stringify(INITIAL_FEEDBACKS));
+      return INITIAL_FEEDBACKS;
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    return INITIAL_FEEDBACKS;
+  }
+};
+
+export const createFeedback = ({ name, phone, type = 'Taklif', message }) => {
+  const feedbacks = getFeedbacks();
+  const newFeedback = {
+    id: `fb-${Date.now()}`,
+    name: name || 'Anonim foydalanuvchi',
+    phone: phone || '',
+    type: type || 'Taklif', // 'Taklif', 'Shikoyat', 'Savol'
+    message: message || '',
+    createdAt: new Date().toISOString(),
+    status: 'new'
+  };
+  const updated = [newFeedback, ...feedbacks];
+  localStorage.setItem(STORAGE_KEYS.FEEDBACKS, JSON.stringify(updated));
+  return newFeedback;
+};
+
+export const deleteFeedback = (id) => {
+  const feedbacks = getFeedbacks();
+  const updated = feedbacks.filter(f => f.id !== id);
+  localStorage.setItem(STORAGE_KEYS.FEEDBACKS, JSON.stringify(updated));
+  return true;
+};
+
+export const updateFeedbackStatus = (id, status = 'read') => {
+  const feedbacks = getFeedbacks();
+  const updated = feedbacks.map(f => f.id === id ? { ...f, status } : f);
+  localStorage.setItem(STORAGE_KEYS.FEEDBACKS, JSON.stringify(updated));
+  return true;
 };

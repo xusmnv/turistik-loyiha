@@ -2,8 +2,17 @@ import React from 'react';
 import { Wifi, Battery, Signal, ArrowLeft } from 'lucide-react';
 
 export default function MobileFrame({ isMobileView, setIsMobileView, children }) {
-  // If not mobile frame view mode, render naturally full responsive layout
-  if (!isMobileView) {
+  // Check if running on mobile device or native APK
+  const isNativeOrMobile = typeof window !== 'undefined' && (
+    Boolean(window.Capacitor?.isNativePlatform?.()) ||
+    (window.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web') ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth < 1024
+  );
+
+  // If not mobile frame view mode or running on mobile/APK, render naturally full responsive layout
+  if (!isMobileView || isNativeOrMobile) {
     return <div className="min-h-screen bg-slate-950">{children}</div>;
   }
 

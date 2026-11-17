@@ -14,6 +14,14 @@ export default function Header({
 }) {
   const isAdmin = isUserAdmin(currentUser);
 
+  // Check if running inside mobile device or native APK
+  const isNativeOrMobile = typeof window !== 'undefined' && (
+    Boolean(window.Capacitor?.isNativePlatform?.()) ||
+    (window.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web') ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  );
+
   return (
     <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
       {/* Top micro banner */}
@@ -107,41 +115,43 @@ export default function Header({
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          {/* APK / PWA download button */}
-          <button
-            onClick={onOpenInstall}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl shadow-sm transition active:scale-95"
-            title="Ilovani mobil telefonga o'rnatish (APK / PWA)"
-          >
-            <Download className="w-3.5 h-3.5 animate-bounce-soft" />
-            <span className="hidden xs:inline">Ilova / APK</span>
-          </button>
+        {/* Action Controls (strictly for Desktop browsers; hidden in APK and mobile screens) */}
+        {!isNativeOrMobile && (
+          <div className="hidden lg:flex items-center gap-2">
+            {/* APK / PWA download button */}
+            <button
+              onClick={onOpenInstall}
+              className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition active:scale-95"
+              title="Ilovani mobil telefonga o'rnatish (APK / PWA)"
+            >
+              <Download className="w-3.5 h-3.5 animate-bounce-soft" />
+              <span>Ilova / APK</span>
+            </button>
 
-          {/* Desktop/Mobile Device Frame Toggle */}
-          <button
-            onClick={() => setIsMobileView(!isMobileView)}
-            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition ${
-              isMobileView
-                ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/30'
-                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-            }`}
-            title={isMobileView ? "Keng ekran ko'rinishiga o'tish" : "Telefon (Mobile App) ko'rinishiga o'tish"}
-          >
-            {isMobileView ? (
-              <>
-                <Monitor className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Keng Ekran</span>
-              </>
-            ) : (
-              <>
-                <Smartphone className="w-3.5 h-3.5 text-blue-400" />
-                <span className="hidden sm:inline">Telefon Rejimi</span>
-              </>
-            )}
-          </button>
-        </div>
+            {/* Desktop Device Frame Toggle */}
+            <button
+              onClick={() => setIsMobileView(!isMobileView)}
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border transition ${
+                isMobileView
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/30'
+                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+              }`}
+              title={isMobileView ? "Keng ekran ko'rinishiga o'tish" : "Telefon (Mobile App) ko'rinishiga o'tish"}
+            >
+              {isMobileView ? (
+                <>
+                  <Monitor className="w-3.5 h-3.5" />
+                  <span>Keng Ekran</span>
+                </>
+              ) : (
+                <>
+                  <Smartphone className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Telefon Rejimi</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

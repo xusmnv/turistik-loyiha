@@ -2,17 +2,28 @@ import React from 'react';
 import { Star, MapPin, Clock, Plane, Calendar, ShieldCheck, Flame, ArrowRight } from 'lucide-react';
 
 export default function TourCard({ tour, onSelect, onBook }) {
+  const numPrice = Number(tour?.price) || 0;
+  const numOldPrice = tour?.oldPrice ? Number(tour.oldPrice) : null;
   const uzsRate = 12900; // 1 USD = 12,900 UZS
-  const priceInUzs = Math.round((tour.price * uzsRate)).toLocaleString('uz-UZ');
+  const priceInUzs = Math.round(numPrice * uzsRate).toLocaleString();
 
-  // Calculate discount remaining time
+  // Calculate discount remaining time safely
   const getRemainingDiscountText = () => {
-    if (!tour.discountUntil || !tour.discountPercent) return null;
-    const diffMs = new Date(tour.discountUntil).getTime() - Date.now();
-    if (diffMs <= 0) return null;
-    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    const untilDate = new Date(tour.discountUntil).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' });
-    return `${days} kun qoldi (${untilDate}gacha)`;
+    try {
+      if (!tour?.discountUntil || !tour?.discountPercent) return null;
+      const targetTime = new Date(tour.discountUntil).getTime();
+      if (isNaN(targetTime)) return null;
+      const diffMs = targetTime - Date.now();
+      if (diffMs <= 0) return null;
+      const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const d = new Date(targetTime);
+      const day = d.getDate();
+      const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+      const monthName = months[d.getMonth()] || '';
+      return `${days} kun qoldi (${day}-${monthName}gacha)`;
+    } catch (e) {
+      return null;
+    }
   };
 
   const remainingText = getRemainingDiscountText();
@@ -108,11 +119,11 @@ export default function TourCard({ tour, onSelect, onBook }) {
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-lg font-black text-white">
-                ${tour.price.toLocaleString()}
+                ${numPrice.toLocaleString()}
               </span>
-              {tour.oldPrice && (
+              {numOldPrice !== null && (
                 <span className="text-xs text-rose-400 font-bold line-through decoration-rose-500 decoration-2">
-                  ${tour.oldPrice.toLocaleString()}
+                  ${numOldPrice.toLocaleString()}
                 </span>
               )}
             </div>

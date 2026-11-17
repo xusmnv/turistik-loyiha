@@ -6,17 +6,28 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const images = tour.gallery && tour.gallery.length ? tour.gallery : [tour.image];
+  const numPrice = Number(tour?.price) || 0;
+  const numOldPrice = tour?.oldPrice ? Number(tour.oldPrice) : null;
   const uzsRate = 12900;
-  const priceInUzs = Math.round((tour.price * uzsRate)).toLocaleString('uz-UZ');
+  const priceInUzs = Math.round(numPrice * uzsRate).toLocaleString();
 
-  // Calculate discount remaining time
+  // Calculate discount remaining time safely
   const getRemainingDiscountText = () => {
-    if (!tour.discountUntil || !tour.discountPercent) return null;
-    const diffMs = new Date(tour.discountUntil).getTime() - Date.now();
-    if (diffMs <= 0) return null;
-    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    const untilDate = new Date(tour.discountUntil).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' });
-    return `${days} kun qoldi (${untilDate}gacha)`;
+    try {
+      if (!tour?.discountUntil || !tour?.discountPercent) return null;
+      const targetTime = new Date(tour.discountUntil).getTime();
+      if (isNaN(targetTime)) return null;
+      const diffMs = targetTime - Date.now();
+      if (diffMs <= 0) return null;
+      const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const d = new Date(targetTime);
+      const day = d.getDate();
+      const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+      const monthName = months[d.getMonth()] || '';
+      return `${days} kun qoldi (${day}-${monthName}gacha)`;
+    } catch (e) {
+      return null;
+    }
   };
 
   const remainingText = getRemainingDiscountText();
@@ -206,10 +217,10 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
               {tour.discountPercent > 0 ? "Chegirmali umumiy narx:" : "Umumiy narx:"}
             </div>
             <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-2xl font-black text-white">${tour.price.toLocaleString()}</span>
-              {tour.oldPrice && (
+              <span className="text-2xl font-black text-white">${numPrice.toLocaleString()}</span>
+              {numOldPrice !== null && (
                 <span className="text-sm font-bold text-rose-400 line-through decoration-rose-500 decoration-2">
-                  ${tour.oldPrice.toLocaleString()}
+                  ${numOldPrice.toLocaleString()}
                 </span>
               )}
               <span className="text-xs text-blue-400">({priceInUzs} so'm)</span>

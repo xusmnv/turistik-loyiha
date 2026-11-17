@@ -740,7 +740,7 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
                           <Check className="w-2.5 h-2.5" /> SMS Tasdiqlangan
                         </span>
                         <span className="text-[11px] text-slate-500">
-                          {new Date(order.createdAt).toLocaleDateString('uz-UZ')}
+                          {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}
                         </span>
                       </div>
 
@@ -1347,7 +1347,9 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
                 const discounted = Math.max(1, Math.round(orig * (1 - pct / 100)));
                 const save = orig - discounted;
                 const days = Number(discountDays) || 5;
-                const expiryDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' });
+                const d = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+                const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+                const expiryDate = `${d.getDate()}-${months[d.getMonth()] || ''} ${d.getFullYear()}-yil`;
 
                 return (
                   <div className="bg-rose-950/30 border border-rose-500/40 p-3 rounded-2xl space-y-1 text-xs text-rose-200">

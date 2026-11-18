@@ -12,10 +12,11 @@ import TourDetailModal from './components/TourDetailModal';
 import BookingModal from './components/BookingModal';
 import TicketVoucherModal from './components/TicketVoucherModal';
 import AdminCRM from './components/AdminCRM';
-import InstallAppModal from './components/InstallAppModal';
 import ContactConsultModal from './components/ContactConsultModal';
 import AuthModal from './components/AuthModal';
-import MobileFrame from './components/MobileFrame';
+import ProfileView from './components/ProfileView';
+import TopNotificationBanner from './components/TopNotificationBanner';
+import NotificationPermissionModal from './components/NotificationPermissionModal';
 import UpdateNotificationModal from './components/UpdateNotificationModal';
 import AIAssistantModal from './components/AIAssistantModal';
 import AIAssistantFloatingButton from './components/AIAssistantFloatingButton';
@@ -48,7 +49,6 @@ export default function App() {
   const [selectedTourForDetail, setSelectedTourForDetail] = useState(null);
   const [selectedTourForBooking, setSelectedTourForBooking] = useState(null);
   const [selectedOrderForVoucher, setSelectedOrderForVoucher] = useState(null);
-  const [showInstallModal, setShowInstallModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [updateTrigger, setUpdateTrigger] = useState(0);
@@ -124,6 +124,7 @@ export default function App() {
           onLogout={handleLogout}
           onOpenAi={() => setShowAiModal(true)}
           onCheckUpdate={() => setUpdateTrigger(prev => prev + 1)}
+          onOpenProfile={() => setActiveTab('profile')}
         />
 
         {/* Dynamic Views based on Tab */}
@@ -504,6 +505,18 @@ export default function App() {
               <ContactConsultModal onClose={() => setActiveTab('home')} />
             </div>
           )}
+
+          {/* TAB 6: PROFILE & APP SETTINGS */}
+          {activeTab === 'profile' && (
+            <div className="max-w-2xl mx-auto space-y-4 animate-fade-in">
+              <ProfileView
+                currentUser={currentUser}
+                onUserUpdated={(updatedUser) => setCurrentUser(updatedUser)}
+                onLogout={handleLogout}
+                onCheckUpdate={() => setUpdateTrigger(prev => prev + 1)}
+              />
+            </div>
+          )}
         </main>
 
         {/* Bottom Navigation for mobile-first experience */}
@@ -511,7 +524,14 @@ export default function App() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           ordersCount={orders.length}
+          currentUser={currentUser}
         />
+
+        {/* Realistic Top SMS Heads-Up Push Notification with Auto-Fill */}
+        <TopNotificationBanner />
+
+        {/* First-Launch Notification Permission Dialog */}
+        <NotificationPermissionModal />
 
         {/* Global Modals */}
         {selectedTourForDetail && (
@@ -540,10 +560,6 @@ export default function App() {
             order={selectedOrderForVoucher}
             onClose={() => setSelectedOrderForVoucher(null)}
           />
-        )}
-
-        {showInstallModal && (
-          <InstallAppModal onClose={() => setShowInstallModal(false)} />
         )}
 
         {showContactModal && (

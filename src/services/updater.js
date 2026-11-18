@@ -1,5 +1,5 @@
 // USMWORLD In-App Auto-Updater Service
-export const BASE_APP_VERSION = "1.0.2";
+export const BASE_APP_VERSION = "1.0.4";
 
 // Get currently installed app version (from localStorage or base)
 export function getInstalledVersion() {

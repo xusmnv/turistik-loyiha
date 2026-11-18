@@ -81,7 +81,29 @@ export default function BookingModal({ tour, onClose, onSuccessOrder }) {
       return;
     }
     setStep(3);
+
+    // Trigger Top Heads-Up Push Notification with verification code!
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('usmworld_sms_received', {
+        detail: {
+          code: generatedSmsCode,
+          phone: phone,
+          context: 'Turni bron qilish'
+        }
+      }));
+    }, 300);
   };
+
+  // Listen to auto-fill event from TopNotificationBanner
+  useEffect(() => {
+    const handleAutoFill = (e) => {
+      if (e.detail?.code) {
+        setEnteredSmsCode(e.detail.code);
+      }
+    };
+    window.addEventListener('usmworld_sms_autofill', handleAutoFill);
+    return () => window.removeEventListener('usmworld_sms_autofill', handleAutoFill);
+  }, []);
 
   // Step 3: Verify Phone SMS Code
   const handleVerifyPhoneSms = (e) => {

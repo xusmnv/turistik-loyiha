@@ -1,9 +1,9 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "minRequiredVersion": "1.0.0",
   "releaseDate": "2026-11-18",
-  "title": "USMWORLD Yangi Versiyasi (1.0.3)",
-  "description": "Ilova ichidan 1-klikda avtomatik yangilash, jonli qayta yuklash (restart) va optimallashtirilgan tezlik.",
+  "title": "USMWORLD Yangi Versiyasi (1.0.4)",
+  "description": "Profil sozlamalari, qora/oq fon mavzusi, tepadan tushuvchi SMS bildirishnoma va avto-kiritish, xavfsiz ruxsatnomalar.",
   "apkUrl": "https://github.com/xusmnv/turistik-loyiha/raw/main/USMWORLD.apk",
   "localApkUrl": "/USMWORLD.apk",
   "forceUpdate": false

@@ -10,7 +10,8 @@ export default function Header({
   onOpenAuth,
   onLogout,
   onOpenAi,
-  onCheckUpdate
+  onCheckUpdate,
+  onOpenProfile
 }) {
   const isAdmin = isUserAdmin(currentUser);
   const { t } = useLanguage();
@@ -43,18 +44,24 @@ export default function Header({
             {/* User status badge */}
             {currentUser ? (
               <div className="flex items-center gap-1.5 sm:gap-2">
-                {isAdmin ? (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold flex items-center gap-1 border border-amber-400/30 text-[10px]">
-                    <Crown className="w-3 h-3 text-amber-400" />
-                    <span className="hidden xs:inline">{t('superAdmin')}</span>
-                    <span className="xs:hidden">Admin</span>
-                  </span>
-                ) : (
-                  <span className="text-blue-100 flex items-center gap-1 text-[11px] truncate max-w-[100px] sm:max-w-none">
-                    <User className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <span className="truncate">{currentUser.name}</span>
-                  </span>
-                )}
+                <button
+                  onClick={onOpenProfile}
+                  className="flex items-center gap-1.5 hover:opacity-80 transition cursor-pointer text-left"
+                  title="Profil sozlamalarini ochish"
+                >
+                  {isAdmin ? (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold flex items-center gap-1 border border-amber-400/30 text-[10px]">
+                      <Crown className="w-3 h-3 text-amber-400" />
+                      <span className="hidden xs:inline">{t('superAdmin')}</span>
+                      <span className="xs:hidden">Admin</span>
+                    </span>
+                  ) : (
+                    <span className="text-blue-100 flex items-center gap-1 text-[11px] truncate max-w-[100px] sm:max-w-none bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-400/20">
+                      <User className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="truncate">{currentUser.name}</span>
+                    </span>
+                  )}
+                </button>
                 <button
                   onClick={onLogout}
                   className="text-slate-300 hover:text-white flex items-center gap-0.5 text-[10px] bg-slate-800/80 px-1.5 py-0.5 rounded transition"

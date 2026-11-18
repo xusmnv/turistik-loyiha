@@ -1,16 +1,25 @@
 import React from 'react';
-import { Home, Compass, Ticket, LayoutDashboard, MessageCircleQuestion } from 'lucide-react';
+import { Home, Compass, Ticket, LayoutDashboard, MessageCircleQuestion, User } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { isUserAdmin } from '../services/auth';
 
-export default function BottomNav({ activeTab, setActiveTab, ordersCount = 0 }) {
-  const { t } = useLanguage();
+export default function BottomNav({ activeTab, setActiveTab, ordersCount = 0, currentUser }) {
+  const { t, effectiveLanguage } = useLanguage();
+  const isAdmin = isUserAdmin(currentUser);
+
+  const navProfileLabel = 
+    effectiveLanguage === 'ru' ? "Профиль" :
+    effectiveLanguage === 'en' ? "Profile" :
+    "Profil";
 
   const navItems = [
     { id: 'home', label: t('navHome'), icon: Home },
     { id: 'catalog', label: t('navTours'), icon: Compass },
     { id: 'orders', label: t('navTickets'), icon: Ticket, badge: ordersCount > 0 ? ordersCount : null },
-    { id: 'admin', label: t('navCrm'), icon: LayoutDashboard, isAccent: true },
-    { id: 'contact', label: t('navContact'), icon: MessageCircleQuestion },
+    { id: 'profile', label: navProfileLabel, icon: User },
+    isAdmin 
+      ? { id: 'admin', label: t('navCrm'), icon: LayoutDashboard, isAccent: true }
+      : { id: 'contact', label: t('navContact'), icon: MessageCircleQuestion }
   ];
 
   return (

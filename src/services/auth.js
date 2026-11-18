@@ -163,3 +163,39 @@ export const registerUser = ({ name, email, password, phone = '' }) => {
 export const logoutUser = () => {
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
 };
+
+// Update user profile (Name, phone, avatar, photo)
+export const updateUserProfile = (userId, { name, phone, avatar, photo }) => {
+  try {
+    const users = getStoredUsers();
+    const index = users.findIndex(u => u.id === userId);
+    
+    if (index !== -1) {
+      users[index] = {
+        ...users[index],
+        name: name ? name.trim() : users[index].name,
+        phone: phone !== undefined ? phone.trim() : users[index].phone,
+        avatar: avatar || users[index].avatar,
+        photo: photo !== undefined ? photo : users[index].photo
+      };
+      localStorage.setItem(STORAGE_KEYS.USERS_LIST, JSON.stringify(users));
+      
+      // Also update session user
+      const current = getCurrentUser();
+      if (current && current.id === userId) {
+        const updatedSession = {
+          ...current,
+          name: users[index].name,
+          phone: users[index].phone,
+          avatar: users[index].avatar,
+          photo: users[index].photo
+        };
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedSession));
+        return { success: true, user: updatedSession };
+      }
+    }
+    return { success: false, error: "Foydalanuvchi topilmadi" };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+};

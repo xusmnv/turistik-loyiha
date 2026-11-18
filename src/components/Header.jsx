@@ -1,5 +1,5 @@
 import React from 'react';
-import { PhoneCall, User, LogOut, Crown, LogIn, Send, Bot, Sparkles } from 'lucide-react';
+import { PhoneCall, User, LogOut, Crown, LogIn, Send, Bot, Sparkles, RefreshCw } from 'lucide-react';
 import { isUserAdmin } from '../services/auth';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSelector from './LanguageSelector';
@@ -9,7 +9,8 @@ export default function Header({
   currentUser,
   onOpenAuth,
   onLogout,
-  onOpenAi
+  onOpenAi,
+  onCheckUpdate
 }) {
   const isAdmin = isUserAdmin(currentUser);
   const { t } = useLanguage();
@@ -26,6 +27,16 @@ export default function Header({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Quick In-App Update Check Button */}
+            <button
+              onClick={onCheckUpdate}
+              className="flex items-center gap-1 text-[10px] text-blue-200 hover:text-white bg-blue-500/20 hover:bg-blue-500/30 px-2 py-0.5 rounded-full border border-blue-400/30 transition active:scale-95"
+              title="Yangilanishlarni tekshirish"
+            >
+              <RefreshCw className="w-2.5 h-2.5 text-blue-300 animate-spin-slow" />
+              <span className="hidden sm:inline">Yangilash</span>
+            </button>
+
             {/* Language Selector in Top Bar */}
             <LanguageSelector compact={true} />
 

@@ -1,9 +1,10 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minRequiredVersion": "1.0.0",
   "releaseDate": "2026-11-18",
-  "title": "USMWORLD Yangi Versiyasi (1.0.2)",
-  "description": "Ekran moslashuvi, Jonli doira Face ID kamerasi, Ofline rejim va Suzuvchi AI Robot.",
-  "apkUrl": "/USMWORLD.apk",
+  "title": "USMWORLD Yangi Versiyasi (1.0.3)",
+  "description": "Ilova ichidan 1-klikda avtomatik yangilash, jonli qayta yuklash (restart) va optimallashtirilgan tezlik.",
+  "apkUrl": "https://github.com/xusmnv/turistik-loyiha/raw/main/USMWORLD.apk",
+  "localApkUrl": "/USMWORLD.apk",
   "forceUpdate": false
 }

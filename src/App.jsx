@@ -51,6 +51,7 @@ export default function App() {
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   // Load data and authenticate on mount
   useEffect(() => {
@@ -122,6 +123,7 @@ export default function App() {
           onOpenAuth={() => setShowAuthModal(true)}
           onLogout={handleLogout}
           onOpenAi={() => setShowAiModal(true)}
+          onCheckUpdate={() => setUpdateTrigger(prev => prev + 1)}
         />
 
         {/* Dynamic Views based on Tab */}
@@ -557,7 +559,7 @@ export default function App() {
         />
 
         {/* In-App Auto Update Checker Modal */}
-        <UpdateNotificationModal />
+        <UpdateNotificationModal triggerCheck={updateTrigger} />
 
         {/* Global Offline Network Guard Modal */}
         <OfflineModal />

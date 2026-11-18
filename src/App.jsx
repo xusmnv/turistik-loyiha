@@ -17,6 +17,8 @@ import ContactConsultModal from './components/ContactConsultModal';
 import AuthModal from './components/AuthModal';
 import MobileFrame from './components/MobileFrame';
 import UpdateNotificationModal from './components/UpdateNotificationModal';
+import AIAssistantModal from './components/AIAssistantModal';
+import AIAssistantFloatingButton from './components/AIAssistantFloatingButton';
 
 import { getTours, getOrders, initializeDB } from './services/db';
 import { getCurrentUser, logoutUser, isUserAdmin } from './services/auth';
@@ -47,6 +49,7 @@ export default function App() {
   const [selectedOrderForVoucher, setSelectedOrderForVoucher] = useState(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   // Load data and authenticate on mount
   useEffect(() => {
@@ -117,6 +120,7 @@ export default function App() {
           currentUser={currentUser}
           onOpenAuth={() => setShowAuthModal(true)}
           onLogout={handleLogout}
+          onOpenAi={() => setShowAiModal(true)}
         />
 
         {/* Dynamic Views based on Tab */}
@@ -134,12 +138,12 @@ export default function App() {
                     {isAdmin ? (
                       <>
                         <Crown className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-amber-300">Bosh Administrator: {currentUser.name}</span>
+                        <span className="text-amber-300">{t('superAdmin')}: {currentUser.name}</span>
                       </>
                     ) : currentUser ? (
                       <>
                         <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                        <span>Xush kelibsiz, {currentUser.name}!</span>
+                        <span>{t('welcomeGreeting')}, {currentUser.name}!</span>
                       </>
                     ) : (
                       <>
@@ -150,11 +154,11 @@ export default function App() {
                   </div>
 
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                    Dunyo Bo'ylab <span className="bg-gradient-to-r from-blue-400 to-teal-300 bg-clip-text text-transparent">50+ Tur Paketlari</span> va Avtomatlashtirilgan Xizmat
+                    {t('heroTitle')}
                   </h1>
 
                   <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    Umra safari, Dubay, Maldiv, Turkiya, Yevropa va O'zbekiston bo'ylab eng sara 50 dan ortiq turlar. Onlayn to'lov, QR vaucher va qulay boshqaruv.
+                    {t('heroSubtitle')}
                   </p>
 
                   <div className="pt-2 flex items-center gap-3">
@@ -163,7 +167,7 @@ export default function App() {
                       className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-600/30 flex items-center gap-2 transition active:scale-95"
                     >
                       <Compass className="w-4 h-4" />
-                      <span>Barcha 50+ Turlarni Ko'rish</span>
+                      <span>{t('viewAllTours')}</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('admin')}
@@ -174,7 +178,7 @@ export default function App() {
                       }`}
                     >
                       {isAdmin && <Crown className="w-3.5 h-3.5 text-amber-400" />}
-                      <span>{isAdmin ? "Admin Paneli" : "Agentlik CRM"}</span>
+                      <span>{isAdmin ? t('adminCRMTitle') : t('agencyCRMTitle')}</span>
                     </button>
                   </div>
                 </div>
@@ -186,7 +190,7 @@ export default function App() {
                   <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
                   <input
                     type="text"
-                    placeholder="Qayerga sayohat qilmoqchisiz? (Makka, Parij, Tokio, Maldiv, Samarqand...)"
+                    placeholder={t('searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-slate-800/80 border border-slate-700/60 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none"
@@ -197,19 +201,19 @@ export default function App() {
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5"
                 >
                   <Search className="w-3.5 h-3.5" />
-                  <span>50+ Turlardan Qidirish</span>
+                  <span>{t('searchToursBtn')}</span>
                 </button>
               </div>
 
               {/* Categories Horizontal Scroll */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-white">Yo'nalishlar</h3>
+                  <h3 className="text-sm font-bold text-white">{t('allDestinations')}</h3>
                   <button 
                     onClick={() => setActiveTab('catalog')} 
                     className="text-xs text-blue-400 font-semibold hover:underline"
                   >
-                    Barchasi ({tours.length} ta tur)
+                    {t('catAll')} ({tours.length} {t('toursCount')})
                   </button>
                 </div>
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -234,9 +238,9 @@ export default function App() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Flame className="w-5 h-5 text-rose-500 fill-rose-500" />
-                    <h3 className="text-base font-extrabold text-white">Qaynoq Takliflar & Chegirmalar</h3>
+                    <h3 className="text-base font-extrabold text-white">{t('heroSpecialOffers')}</h3>
                   </div>
-                  <span className="text-xs text-rose-400 font-semibold">-20% gacha chegirmalar</span>
+                  <span className="text-xs text-rose-400 font-semibold">{t('discountUpTo')}</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -254,29 +258,29 @@ export default function App() {
               {/* Why USMWORLD Features */}
               <div className="bg-slate-900/60 p-5 rounded-3xl border border-slate-800 space-y-4">
                 <h3 className="text-base font-extrabold text-white text-center">
-                  Nima Uchun USMWORLD Travel?
+                  {t('whyChooseUs')}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 text-center space-y-2">
                     <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 mx-auto flex items-center justify-center">
                       <CreditCard className="w-5 h-5" />
                     </div>
-                    <h4 className="text-xs font-bold text-white">Avtomatlashtirilgan To'lov</h4>
-                    <p className="text-[11px] text-slate-400">Payme, Click, Uzum va Visa orqali 0% komissiya bilan xavfsiz to'lov.</p>
+                    <h4 className="text-xs font-bold text-white">{t('featurePayment')}</h4>
+                    <p className="text-[11px] text-slate-400">{t('featurePaymentDesc')}</p>
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 text-center space-y-2">
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 mx-auto flex items-center justify-center">
                       <Ticket className="w-5 h-5" />
                     </div>
-                    <h4 className="text-xs font-bold text-white">Elektron QR Vaucher</h4>
-                    <p className="text-[11px] text-slate-400">To'lovdan so'ng darhol QR-kodli rasmiy chipta va vaucher taqdim etiladi.</p>
+                    <h4 className="text-xs font-bold text-white">{t('featureVoucher')}</h4>
+                    <p className="text-[11px] text-slate-400">{t('featureVoucherDesc')}</p>
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 text-center space-y-2">
                     <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 mx-auto flex items-center justify-center">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
-                    <h4 className="text-xs font-bold text-white">100% Rasmiy Litsenziya</h4>
-                    <p className="text-[11px] text-slate-400">Turizm qo'mitasi litsenziyasi va xalqaro sug'urta kafolati.</p>
+                    <h4 className="text-xs font-bold text-white">{t('featureLicense')}</h4>
+                    <p className="text-[11px] text-slate-400">{t('featureLicenseDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -284,12 +288,12 @@ export default function App() {
               {/* All Tours Preview */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-extrabold text-white">Ommabop Yo'nalishlar ({tours.length} ta)</h3>
+                  <h3 className="text-base font-extrabold text-white">{t('filterPopular')} ({tours.length})</h3>
                   <button
                     onClick={() => setActiveTab('catalog')}
                     className="text-xs text-blue-400 font-semibold hover:underline flex items-center gap-1"
                   >
-                    <span>To'liq katalog (50+)</span>
+                    <span>{t('fullCatalog')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -316,7 +320,7 @@ export default function App() {
                     <Search className="w-4 h-4 absolute left-3 top-3 text-slate-500" />
                     <input
                       type="text"
-                      placeholder="Tur nomi, davlat yoki shahar bo'yicha qidiring..."
+                      placeholder={t('searchPlaceholder')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-slate-800 border border-slate-700 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none"
@@ -324,15 +328,15 @@ export default function App() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 shrink-0">Saralash:</span>
+                    <span className="text-xs text-slate-400 shrink-0">{t('sortBy')}</span>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                     >
-                      <option value="popular">Reyting bo'yicha</option>
-                      <option value="price-low">Narxi: Avval arzonlari</option>
-                      <option value="price-high">Narxi: Avval qimmatlari</option>
+                      <option value="popular">{t('filterPopular')}</option>
+                      <option value="price-low">{t('filterPriceLow')}</option>
+                      <option value="price-high">{t('filterPriceHigh')}</option>
                     </select>
                   </div>
                 </div>
@@ -357,13 +361,13 @@ export default function App() {
 
               {/* Counter */}
               <div className="text-xs text-slate-400 flex items-center justify-between px-1">
-                <span>Topildi: <b className="text-white">{filteredTours.length} ta</b> tur paketi (Jami bazada {tours.length}+ ta)</span>
+                <span>{t('foundToursPrefix')} <b className="text-white">{filteredTours.length} {t('toursCount')}</b> ({t('toursInDatabase')} {tours.length}+)</span>
                 {selectedCategory !== 'Barchasi' && (
                   <button 
                     onClick={() => setSelectedCategory('Barchasi')}
                     className="text-blue-400 hover:underline"
                   >
-                    Filtrni tozalash
+                    {t('clearFilter')}
                   </button>
                 )}
               </div>
@@ -372,8 +376,8 @@ export default function App() {
               {filteredTours.length === 0 ? (
                 <div className="text-center py-16 bg-slate-900/40 rounded-3xl border border-slate-800">
                   <Compass className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                  <h4 className="text-sm font-bold text-white">So'rovingizga mos turlar topilmadi</h4>
-                  <p className="text-xs text-slate-400 mt-1">Boshqa kalit so'zlardan foydalanib ko'ring yoki toifani o'zgartiring.</p>
+                  <h4 className="text-sm font-bold text-white">{t('notFoundTours')}</h4>
+                  <p className="text-xs text-slate-400 mt-1">{t('notFoundDesc')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -395,26 +399,26 @@ export default function App() {
             <div className="space-y-4 animate-fade-in max-w-2xl mx-auto">
               <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Mening Chiptalarim va Buyurtmalar</h2>
-                  <p className="text-xs text-slate-400">Bron qilingan sayohatlaringiz va elektron vaucherlar</p>
+                  <h2 className="text-lg font-bold text-white">{t('myBookings')}</h2>
+                  <p className="text-xs text-slate-400">{t('myBookingsSub')}</p>
                 </div>
                 <div className="px-3 py-1 bg-blue-600/20 text-blue-400 font-bold text-xs rounded-xl border border-blue-500/30">
-                  {orders.length} ta buyurtma
+                  {orders.length} {t('ordersCountLabel')}
                 </div>
               </div>
 
               {orders.length === 0 ? (
                 <div className="text-center py-16 bg-slate-900/40 rounded-3xl border border-slate-800 space-y-3">
                   <Ticket className="w-12 h-12 text-slate-600 mx-auto" />
-                  <h4 className="text-base font-bold text-white">Sizda hali buyurtmalar yo'q</h4>
+                  <h4 className="text-base font-bold text-white">{t('noOrdersYet')}</h4>
                   <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                    50+ turlar katalogimizdan o'zingizga ma'qul sayohatni tanlang va onlayn bron qiling!
+                    {t('noOrdersDesc')}
                   </p>
                   <button
                     onClick={() => setActiveTab('catalog')}
                     className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
                   >
-                    Turlarni ko'rish
+                    {t('exploreToursBtn')}
                   </button>
                 </div>
               ) : (
@@ -434,7 +438,7 @@ export default function App() {
                             <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
                               isPaid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
                             }`}>
-                              {isPaid ? "To'langan" : "To'lov kutilmoqda"}
+                              {isPaid ? t('orderStatusPaid') : t('orderStatusPending')}
                             </span>
                           </div>
                           <span className="text-[11px] font-mono text-slate-400">
@@ -446,19 +450,19 @@ export default function App() {
                           <h4 className="text-sm font-bold text-white">{ord.tourTitle}</h4>
                           <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 mt-2">
                             <div>
-                              <span className="text-slate-500 text-[10px] block">Sayohatchi:</span>
+                              <span className="text-slate-500 text-[10px] block">{t('travelerLabel')}</span>
                               <span className="font-semibold">{ord.customerName}</span>
                             </div>
                             <div>
-                              <span className="text-slate-500 text-[10px] block">Pasport raqami:</span>
+                              <span className="text-slate-500 text-[10px] block">{t('passportLabel')}</span>
                               <span className="font-mono text-blue-300">{ord.passportNumber}</span>
                             </div>
                             <div>
-                              <span className="text-slate-500 text-[10px] block">Jo'nash sanasi:</span>
+                              <span className="text-slate-500 text-[10px] block">{t('travelDateLabel')}</span>
                               <span>{ord.travelDate}</span>
                             </div>
                             <div>
-                              <span className="text-slate-500 text-[10px] block">Umumiy to'lov:</span>
+                              <span className="text-slate-500 text-[10px] block">{t('totalPaymentLabel')}</span>
                               <span className="font-bold text-emerald-400">${ord.totalPrice} ({ord.paymentMethod?.toUpperCase()})</span>
                             </div>
                           </div>
@@ -470,7 +474,7 @@ export default function App() {
                             className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow flex items-center justify-center gap-1.5 transition active:scale-95"
                           >
                             <Ticket className="w-3.5 h-3.5" />
-                            <span>Elektron Vaucher / Biletni Ko'rish</span>
+                            <span>{t('viewVoucher')}</span>
                           </button>
                         </div>
                       </div>
@@ -553,6 +557,13 @@ export default function App() {
 
         {/* In-App Auto Update Checker Modal */}
         <UpdateNotificationModal />
+
+        {/* Gemini AI Bot Floating Button & Assistant Modal */}
+        <AIAssistantFloatingButton onClick={() => setShowAiModal(true)} />
+        <AIAssistantModal 
+          isOpen={showAiModal} 
+          onClose={() => setShowAiModal(false)} 
+        />
 
       </div>
     </div>

@@ -1,9 +1,11 @@
 import React from 'react';
 import { X, Printer, Plane, Calendar, User, ShieldCheck, MapPin, QrCode, CheckCircle, Download } from 'lucide-react';
 import { AGENCY_INFO } from '../data/mockData';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function TicketVoucherModal({ order, onClose }) {
   if (!order) return null;
+  const { t, effectiveLanguage } = useLanguage();
 
   const handlePrint = () => {
     window.print();
@@ -15,8 +17,8 @@ export default function TicketVoucherModal({ order, onClose }) {
         {/* Top Control Bar */}
         <div className="p-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-bold rounded">
-              ELEKTRON VAUCHER
+            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-bold rounded uppercase">
+              {effectiveLanguage === 'ru' ? 'ЭЛЕКТРОННЫЙ ВАУЧЕР' : effectiveLanguage === 'en' ? 'ELECTRONIC VOUCHER' : 'ELEKTRON VAUCHER'}
             </span>
             <span className="text-xs text-slate-400 font-mono">#{order.orderNumber}</span>
           </div>
@@ -25,10 +27,10 @@ export default function TicketVoucherModal({ order, onClose }) {
             <button
               onClick={handlePrint}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1.5 transition"
-              title="Vaucherni chop etish / PDF"
+              title="Print / PDF"
             >
               <Printer className="w-4 h-4 text-blue-400" />
-              <span className="hidden sm:inline">Chop etish / PDF</span>
+              <span className="hidden sm:inline">{effectiveLanguage === 'ru' ? 'Печать / PDF' : effectiveLanguage === 'en' ? 'Print / PDF' : 'Chop etish / PDF'}</span>
             </button>
             <button
               onClick={onClose}
@@ -54,13 +56,17 @@ export default function TicketVoucherModal({ order, onClose }) {
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-white tracking-wide">USMWORLD TRAVEL</h3>
-                <p className="text-[10px] text-blue-400">Rasmiy sayohat va turizm vaucheri</p>
+                <p className="text-[10px] text-blue-400">
+                  {effectiveLanguage === 'ru' ? 'Официальный ваучер на путешествие' : effectiveLanguage === 'en' ? 'Official travel and tour voucher' : 'Rasmiy sayohat va turizm vaucheri'}
+                </p>
               </div>
             </div>
 
             <div className="text-right">
               <div className="inline-block px-2.5 py-1 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black rounded-lg uppercase">
-                {order.paymentStatus === 'paid' ? 'TO\'LANGAN / PAID' : 'KUTILMOQDA'}
+                {order.paymentStatus === 'paid' 
+                  ? (effectiveLanguage === 'ru' ? 'ОПЛАЧЕНО / PAID' : effectiveLanguage === 'en' ? 'PAID' : 'TO\'LANGAN / PAID')
+                  : (effectiveLanguage === 'ru' ? 'ОЖИДАЕТ ОПЛАТЫ' : effectiveLanguage === 'en' ? 'PENDING' : 'KUTILMOQDA')}
               </div>
               <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                 KOD: {order.ticketCode}
@@ -70,7 +76,9 @@ export default function TicketVoucherModal({ order, onClose }) {
 
           {/* Tour info box */}
           <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60 space-y-2">
-            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Tur yo'nalishi:</div>
+            <div className="text-[11px] text-slate-400 uppercase tracking-wider">
+              {effectiveLanguage === 'ru' ? 'Направление тура:' : effectiveLanguage === 'en' ? 'Tour destination:' : 'Tur yo\'nalishi:'}
+            </div>
             <h4 className="text-lg font-bold text-white leading-tight">
               {order.tourTitle}
             </h4>
@@ -78,11 +86,11 @@ export default function TicketVoucherModal({ order, onClose }) {
             <div className="grid grid-cols-2 gap-2 text-xs pt-1">
               <div className="flex items-center gap-1.5 text-slate-300">
                 <Calendar className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>Jo'nash: <b>{order.travelDate}</b></span>
+                <span>{effectiveLanguage === 'ru' ? 'Вылет:' : effectiveLanguage === 'en' ? 'Departure:' : 'Jo\'nash:'} <b>{order.travelDate}</b></span>
               </div>
               <div className="flex items-center gap-1.5 text-slate-300">
                 <User className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>Yo'lovchilar: <b>{order.travelersCount} kishi</b></span>
+                <span>{effectiveLanguage === 'ru' ? 'Пассажиры:' : effectiveLanguage === 'en' ? 'Travelers:' : 'Yo\'lovchilar:'} <b>{order.travelersCount} {effectiveLanguage === 'ru' ? 'чел' : effectiveLanguage === 'en' ? 'prs' : 'kishi'}</b></span>
               </div>
             </div>
           </div>
@@ -112,22 +120,30 @@ export default function TicketVoucherModal({ order, onClose }) {
             {/* Passenger Info Grid */}
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="bg-slate-800/40 p-2.5 rounded-xl border border-slate-700/40">
-                <span className="text-[10px] text-slate-400">Sayohatchi F.I.SH:</span>
+                <span className="text-[10px] text-slate-400">
+                  {effectiveLanguage === 'ru' ? 'Ф.И.О. пассажира:' : effectiveLanguage === 'en' ? 'Traveler Name:' : 'Sayohatchi F.I.SH:'}
+                </span>
                 <div className="text-xs font-bold text-white mt-0.5">{order.customerName}</div>
               </div>
               <div className="bg-slate-800/40 p-2.5 rounded-xl border border-slate-700/40">
-                <span className="text-[10px] text-slate-400">Pasport seriya / raqam:</span>
+                <span className="text-[10px] text-slate-400">
+                  {effectiveLanguage === 'ru' ? 'Серия / номер паспорта:' : effectiveLanguage === 'en' ? 'Passport Number:' : 'Pasport seriya / raqam:'}
+                </span>
                 <div className="text-xs font-bold text-blue-300 font-mono mt-0.5">{order.passportNumber}</div>
               </div>
               <div className="bg-slate-800/40 p-2.5 rounded-xl border border-slate-700/40">
-                <span className="text-[10px] text-slate-400">Telefon (SMS tasdiqlangan):</span>
+                <span className="text-[10px] text-slate-400">
+                  {effectiveLanguage === 'ru' ? 'Телефон (SMS подтвержден):' : effectiveLanguage === 'en' ? 'Phone (SMS verified):' : 'Telefon (SMS tasdiqlangan):'}
+                </span>
                 <div className="text-xs font-semibold text-emerald-300 mt-0.5 flex items-center gap-1">
                   <span>{order.phone}</span>
                   <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1 py-0.2 rounded">SMS ✓</span>
                 </div>
               </div>
               <div className="bg-slate-800/40 p-2.5 rounded-xl border border-slate-700/40">
-                <span className="text-[10px] text-slate-400">To'lov holati & Usuli:</span>
+                <span className="text-[10px] text-slate-400">
+                  {effectiveLanguage === 'ru' ? 'Статус и метод оплаты:' : effectiveLanguage === 'en' ? 'Payment status & method:' : 'To\'lov holati & Usuli:'}
+                </span>
                 <div className="text-xs font-bold text-emerald-400 uppercase mt-0.5">
                   {order.paymentMethod} (${order.totalPrice})
                 </div>
@@ -140,19 +156,23 @@ export default function TicketVoucherModal({ order, onClose }) {
             <div className="flex items-center justify-between text-slate-300">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Tibbiy sug'urta:
+                {effectiveLanguage === 'ru' ? 'Медстраховка:' : effectiveLanguage === 'en' ? 'Travel insurance:' : 'Tibbiy sug\'urta:'}
               </span>
               <span className="font-semibold text-emerald-400">
-                {order.hasInsurance ? "Rasmiylashtirilgan ✓" : "Kiritilmagan"}
+                {order.hasInsurance 
+                  ? (effectiveLanguage === 'ru' ? 'Оформлена ✓' : effectiveLanguage === 'en' ? 'Issued ✓' : 'Rasmiylashtirilgan ✓') 
+                  : (effectiveLanguage === 'ru' ? 'Не включена' : effectiveLanguage === 'en' ? 'Not included' : 'Kiritilmagan')}
               </span>
             </div>
             <div className="flex items-center justify-between text-slate-300">
               <span className="flex items-center gap-1.5">
                 <Plane className="w-4 h-4 text-blue-400" />
-                VIP Aeroport transferi:
+                {effectiveLanguage === 'ru' ? 'VIP трансфер из аэропорта:' : effectiveLanguage === 'en' ? 'VIP Airport transfer:' : 'VIP Aeroport transferi:'}
               </span>
               <span className="font-semibold text-blue-400">
-                {order.hasVipTransfer ? "Kiritilgan ✓" : "Standart"}
+                {order.hasVipTransfer 
+                  ? (effectiveLanguage === 'ru' ? 'Включен ✓' : effectiveLanguage === 'en' ? 'Included ✓' : 'Kiritilgan ✓') 
+                  : (effectiveLanguage === 'ru' ? 'Стандартный' : effectiveLanguage === 'en' ? 'Standard' : 'Standart')}
               </span>
             </div>
           </div>
@@ -175,9 +195,15 @@ export default function TicketVoucherModal({ order, onClose }) {
               </div>
 
               <div>
-                <div className="text-xs font-bold text-white">QR Tekshiruv Kodingiz</div>
+                <div className="text-xs font-bold text-white">
+                  {effectiveLanguage === 'ru' ? 'Ваш QR Код Верификации' : effectiveLanguage === 'en' ? 'Your Verification QR Code' : 'QR Tekshiruv Kodingiz'}
+                </div>
                 <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
-                  Aeroportda va mehmonxonaga joylashishda ushbu QR kodni ko'rsatishingiz kifoya.
+                  {effectiveLanguage === 'ru' 
+                    ? 'Предъявите этот QR-код при посадке на рейс и регистрации в отеле.' 
+                    : effectiveLanguage === 'en' 
+                    ? 'Simply present this QR code at the airport and hotel check-in.' 
+                    : 'Aeroportda va mehmonxonaga joylashishda ushbu QR kodni ko\'rsatishingiz kifoya.'}
                 </div>
               </div>
             </div>
@@ -204,13 +230,13 @@ export default function TicketVoucherModal({ order, onClose }) {
             className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition active:scale-95"
           >
             <Download className="w-4 h-4" />
-            <span>Vaucherni Saqlash (PDF)</span>
+            <span>{effectiveLanguage === 'ru' ? 'Сохранить Ваучер (PDF)' : effectiveLanguage === 'en' ? 'Save Voucher (PDF)' : 'Vaucherni Saqlash (PDF)'}</span>
           </button>
           <button
             onClick={onClose}
             className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition"
           >
-            Yopish
+            {t('close')}
           </button>
         </div>
       </div>

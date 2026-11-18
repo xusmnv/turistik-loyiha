@@ -126,7 +126,7 @@ export default function TourCard({ tour, onSelect, onBook }) {
         <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
           <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wider">
-              {tour.discountPercent > 0 ? `${t('discount')}:` : "Narx:"}
+              {tour.discountPercent > 0 ? `${t('discount')}:` : t('tourPriceLabel')}
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-lg font-black text-white">

@@ -122,24 +122,26 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
               </div>
               <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
                 <Plane className="w-4 h-4 text-emerald-400 mb-1" />
-                <div className="text-[10px] text-slate-400">Avia:</div>
-                <div className="text-xs font-bold text-white truncate">{tour.flightInfo?.split('(')[0] || 'Parvoz'}</div>
+                <div className="text-[10px] text-slate-400">{effectiveLanguage === 'ru' ? 'Перелет:' : effectiveLanguage === 'en' ? 'Flight:' : 'Avia:'}</div>
+                <div className="text-xs font-bold text-white truncate">{tour.flightInfo?.split('(')[0] || (effectiveLanguage === 'ru' ? 'Рейс' : effectiveLanguage === 'en' ? 'Flight' : 'Parvoz')}</div>
               </div>
               <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
                 <Hotel className="w-4 h-4 text-amber-400 mb-1" />
-                <div className="text-[10px] text-slate-400">Mehmonxona:</div>
+                <div className="text-[10px] text-slate-400">{t('hotelAccom')}:</div>
                 <div className="text-xs font-bold text-white truncate">{tour.hotel || '4-5★ Lux'}</div>
               </div>
               <div className="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/50">
                 <Utensils className="w-4 h-4 text-purple-400 mb-1" />
-                <div className="text-[10px] text-slate-400">Taom:</div>
+                <div className="text-[10px] text-slate-400">{t('mealPlan')}:</div>
                 <div className="text-xs font-bold text-white truncate">{tour.mealPlan || 'All Inclusive'}</div>
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <h4 className="text-sm font-bold text-white mb-1.5">Tur haqida to'liq ma'lumot:</h4>
+              <h4 className="text-sm font-bold text-white mb-1.5">
+                {effectiveLanguage === 'ru' ? 'Полная информация о туре:' : effectiveLanguage === 'en' ? 'Full tour information:' : "Tur haqida to'liq ma'lumot:"}
+              </h4>
               <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
                 {tour.description}
               </p>
@@ -161,7 +163,9 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
             {/* Itinerary */}
             {tour.itinerary && tour.itinerary.length > 0 && (
               <div>
-                <h4 className="text-sm font-bold text-white mb-3">Sayohat dasturi kunbay:</h4>
+                <h4 className="text-sm font-bold text-white mb-3">
+                  {effectiveLanguage === 'ru' ? 'Программа тура по дням:' : effectiveLanguage === 'en' ? 'Day-by-day itinerary:' : 'Sayohat dasturi kunbay:'}
+                </h4>
                 <div className="space-y-3 relative before:absolute before:inset-0 before:left-2.5 before:w-0.5 before:bg-slate-800">
                   {tour.itinerary.map((item, idx) => (
                     <div key={idx} className="relative flex items-start gap-3 pl-1">
@@ -180,7 +184,9 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
 
             {/* Available Dates */}
             <div>
-              <h4 className="text-sm font-bold text-white mb-2">Mavjud jo'nash sanalari:</h4>
+              <h4 className="text-sm font-bold text-white mb-2">
+                {effectiveLanguage === 'ru' ? 'Доступные даты вылета:' : effectiveLanguage === 'en' ? 'Available departure dates:' : "Mavjud jo'nash sanalari:"}
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {tour.departureDates?.map((date, idx) => (
                   <span
@@ -200,7 +206,7 @@ export default function TourDetailModal({ tour, onClose, onBook }) {
         <div className="absolute bottom-0 inset-x-0 p-4 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800 flex items-center justify-between gap-4 z-30">
           <div>
             <div className="text-[11px] text-slate-400">
-              {tour.discountPercent > 0 ? `${t('discount')} Narx:` : "Umumiy narx:"}
+              {tour.discountPercent > 0 ? `${t('discount')}:` : t('tourPriceLabel')}
             </div>
             <div className="flex items-baseline gap-1.5 flex-wrap">
               <span className="text-2xl font-black text-white">${numPrice.toLocaleString()}</span>

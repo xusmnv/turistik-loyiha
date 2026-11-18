@@ -3,19 +3,23 @@ import {
   LayoutDashboard, Users, DollarSign, PackageCheck, AlertCircle, Plus, 
   Trash2, CheckCircle2, XCircle, Clock, RefreshCw, Download, Search,
   Eye, Plane, ShieldAlert, Sparkles, Filter, Edit3, Save, Lock, Crown, ArrowRight,
-  Upload, Scissors, Camera, UserCheck, Check, X, Flame, MessageSquare, Tag, Calendar, Phone, Send
+  Upload, Scissors, Camera, UserCheck, Check, X, Flame, MessageSquare, Tag, Calendar, Phone, Send,
+  FileDown, Printer, PlusCircle, TrendingUp, TrendingDown, Receipt, BarChart3
 } from 'lucide-react';
 import { 
   getOrders, getTours, getAgencyStats, updateOrderStatus, 
   createTour, deleteTour, updateTourPrice, resetDatabase,
   getFeedbacks, deleteFeedback, updateFeedbackStatus,
-  applyTourDiscount, removeTourDiscount
+  applyTourDiscount, removeTourDiscount,
+  getExpenses, createExpense, deleteExpense, getFinancialAccounting, downloadFinancialReportCSV
 } from '../services/db';
 import { isUserAdmin, loginUser } from '../services/auth';
+import { useLanguage } from '../context/LanguageContext';
 import ImageUploadCropper from './ImageUploadCropper';
 
 export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, onAuthSuccess }) {
   const isAdmin = isUserAdmin(currentUser);
+  const { t, effectiveLanguage } = useLanguage();
 
   // If not admin, show dedicated Admin Security Login
   const [adminEmail, setAdminEmail] = useState('');
@@ -24,16 +28,29 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
   const [authLoading, setAuthLoading] = useState(false);
 
   // Admin Dashboard states
-  const [activeTab, setActiveTab] = useState('tours'); // 'tours', 'orders', 'buyers', 'feedbacks', 'addTour'
+  const [activeTab, setActiveTab] = useState('tours'); // 'tours', 'orders', 'buyers', 'finance', 'feedbacks', 'addTour'
   const [orders, setOrders] = useState(getOrders());
   const [tours, setTours] = useState(getTours());
   const [feedbacks, setFeedbacks] = useState(getFeedbacks());
   const [stats, setStats] = useState(getAgencyStats());
+  const [expenses, setExpenses] = useState(getExpenses());
+  const [financials, setFinancials] = useState(getFinancialAccounting());
   const [searchQuery, setSearchQuery] = useState('');
   const [tourSearchQuery, setTourSearchQuery] = useState('');
+  const [financeSearch, setFinanceSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [feedbackFilter, setFeedbackFilter] = useState('all');
   const [previewPhoto, setPreviewPhoto] = useState(null);
+
+  // Financial expense modal form state
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+  const [newExpense, setNewExpense] = useState({
+    title: '',
+    category: 'Aviachiptalar',
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    notes: ''
+  });
 
   // Tour Discount Modal state
   const [discountModalTour, setDiscountModalTour] = useState(null);
@@ -72,7 +89,42 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
     setTours(getTours());
     setStats(getAgencyStats());
     setFeedbacks(getFeedbacks());
+    setExpenses(getExpenses());
+    setFinancials(getFinancialAccounting());
     if (onDataChanged) onDataChanged();
+  };
+
+  const handleAddExpenseSubmit = (e) => {
+    e.preventDefault();
+    if (!newExpense.title.trim() || !newExpense.amount) {
+      alert("Iltimos, xarajat nomi va summasini kiriting!");
+      return;
+    }
+    createExpense(newExpense);
+    setNewExpense({
+      title: '',
+      category: 'Aviachiptalar',
+      amount: '',
+      date: new Date().toISOString().split('T')[0],
+      notes: ''
+    });
+    setShowAddExpenseModal(false);
+    refreshAllData();
+  };
+
+  const handleDeleteExpense = (id) => {
+    if (window.confirm("Haqiqatan ham ushbu xarajatni o'chirmoqchimisiz?")) {
+      deleteExpense(id);
+      refreshAllData();
+    }
+  };
+
+  const handleDownloadReport = () => {
+    downloadFinancialReportCSV(effectiveLanguage);
+  };
+
+  const handlePrintReport = () => {
+    window.print();
   };
 
   // Admin login handler (private & secure)
@@ -473,7 +525,19 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
           }`}
         >
           <Camera className="w-3.5 h-3.5" />
-          <span>Xaridorlar & Face ID ({orders.length})</span>
+          <span>{t('tabAdminBuyers')} ({orders.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('finance')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'finance'
+              ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+              : 'bg-slate-800/60 text-slate-400 hover:text-white'
+          }`}
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>{t('tabAdminFinance')}</span>
         </button>
 
         <button
@@ -485,7 +549,7 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          <span>Shikoyat & Takliflar ({feedbacks.length})</span>
+          <span>{t('tabAdminFeedbacks')} ({feedbacks.length})</span>
           {feedbacks.filter(f => f.status === 'new').length > 0 && (
             <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
           )}
@@ -932,7 +996,436 @@ export default function AdminCRM({ onViewVoucher, onDataChanged, currentUser, on
         </div>
       )}
 
-      {/* TAB: SHIKOYAT VA TAKLIFLAR (FEEDBACKS & COMPLAINTS) */}
+      {/* TAB: KIRIM-CHIQIM VA MOLIYAVIY HISOBOTLAR (FINANCE & ACCOUNTING) */}
+      {activeTab === 'finance' && (
+        <div className="space-y-5 animate-fade-in">
+          {/* Header Banner */}
+          <div className="bg-gradient-to-r from-teal-950/40 via-slate-900 to-slate-900 border border-teal-500/30 p-4 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 bg-teal-500/20 text-teal-300 font-bold rounded-full uppercase text-[10px] tracking-wider border border-teal-500/30">
+                  {t('tabAdminFinance')}
+                </span>
+                <span className="text-[11px] text-slate-400">USMWORLD 2026 Audit</span>
+              </div>
+              <h3 className="text-lg font-black text-white mt-1 flex items-center gap-2">
+                <span>{effectiveLanguage === 'ru' ? "Финансовый контроль доходов и расходов" : effectiveLanguage === 'en' ? "Financial Income & Expense Audit" : "Kirim-Chiqim va Moliyaviy Nazorat"}</span>
+                <Receipt className="w-5 h-5 text-teal-400" />
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5">
+                {effectiveLanguage === 'ru' 
+                  ? "Полный контроль продаж туров, кто какой тур купил, учет расходов и выгрузка отчетов." 
+                  : effectiveLanguage === 'en' 
+                  ? "Full control of tour sales, traveler audit, agency outgoings, and downloadable reports." 
+                  : "Kim qaysi turni olgani, tushumlar, barcha xarajatlar va hisobot faylini yuklab olish."}
+              </p>
+            </div>
+
+            {/* Action buttons (Download CSV / Print / Add Expense) */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={handleDownloadReport}
+                className="px-3.5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-600/30 flex items-center gap-1.5 transition active:scale-95"
+                title="Excel / CSV formatida yuklab olish"
+              >
+                <FileDown className="w-4 h-4" />
+                <span>{t('finDownloadReport')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePrintReport}
+                className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition"
+                title="Hisobotni chop etish yoki PDF sifatida saqlash"
+              >
+                <Printer className="w-4 h-4 text-slate-400" />
+                <span>{t('finPrintReport')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAddExpenseModal(true)}
+                className="px-3 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition active:scale-95"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>{t('finAddExpense')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 KPI Financial Overview Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Total Income */}
+            <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('finTotalIncome')}</span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-white">${financials.totalIncome.toLocaleString()}</div>
+              <div className="flex items-center gap-2 mt-2 text-[10px]">
+                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+                  {t('finPaidRevenue')}: ${financials.paidIncome.toLocaleString()}
+                </span>
+                {financials.pendingIncome > 0 && (
+                  <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                    Kutilmoqda: ${financials.pendingIncome.toLocaleString()}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Total Expenses */}
+            <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-xl pointer-events-none" />
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('finTotalExpenses')}</span>
+                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                  <TrendingDown className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-rose-300">${financials.totalExpenses.toLocaleString()}</div>
+              <div className="text-[10px] text-slate-400 mt-2">
+                {expenses.length} {effectiveLanguage === 'ru' ? "статей расходов" : effectiveLanguage === 'en' ? "expense items" : "ta xarajat moddasi"}
+              </div>
+            </div>
+
+            {/* Net Profit */}
+            <div className="bg-slate-900/90 p-4 rounded-2xl border border-teal-500/30 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full blur-xl pointer-events-none" />
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-teal-400 uppercase tracking-wider">{t('finNetProfit')}</span>
+                <div className="w-8 h-8 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold">
+                  $
+                </div>
+              </div>
+              <div className={`text-2xl font-black ${financials.netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'}`}>
+                {financials.netProfit >= 0 ? '+' : ''}${financials.netProfit.toLocaleString()}
+              </div>
+              <div className="text-[10px] text-teal-400/90 mt-2 font-bold">
+                {t('finProfitMargin')}: {financials.profitMargin}%
+              </div>
+            </div>
+
+            {/* Travelers & Tours Sold */}
+            <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {effectiveLanguage === 'ru' ? "Всего Туристов" : effectiveLanguage === 'en' ? "Total Travelers" : "Jami Sayyohlar"}
+                </span>
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black text-white">{totalAllOrdersTravelers}</div>
+              <div className="text-[10px] text-slate-400 mt-2">
+                {orders.length} {effectiveLanguage === 'ru' ? "оформленных заказов" : effectiveLanguage === 'en' ? "booked tours" : "ta rasmiylashtirilgan tur"}
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 1: KIM QAYSI TURNI SOTIB OLGANI (SALES AUDIT TABLE) */}
+          <div className="bg-slate-900/90 rounded-3xl border border-slate-800 p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <h4 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <span>{t('finSalesHistoryTitle')}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold font-mono">
+                    {orders.length}
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {effectiveLanguage === 'ru' 
+                    ? "Подробный список всех туристов, паспортные данные, телефоны и приобретенные туры" 
+                    : effectiveLanguage === 'en'
+                    ? "Detailed audit of customers, passport numbers, contact phones, and purchased tours"
+                    : "Mijozlar ismi, pasport seriyasi, telefon raqami va qaysi turni qancha summaga sotib olgani"}
+                </p>
+              </div>
+
+              {/* Search within finance sales */}
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder={effectiveLanguage === 'ru' ? "Поиск по клиенту или туру..." : effectiveLanguage === 'en' ? "Search customer or tour..." : "Mijoz, pasport yoki tur qidirish..."}
+                  value={financeSearch}
+                  onChange={(e) => setFinanceSearch(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                />
+              </div>
+            </div>
+
+            {/* Sales Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-950/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-3">№</th>
+                    <th className="py-3 px-3">{t('finCustomer')}</th>
+                    <th className="py-3 px-3">{t('finPassport')}</th>
+                    <th className="py-3 px-3">{t('finPhone')}</th>
+                    <th className="py-3 px-3">{t('finTour')}</th>
+                    <th className="py-3 px-3">{t('finDate')}</th>
+                    <th className="py-3 px-3 text-center">{effectiveLanguage === 'ru' ? "Туристов" : effectiveLanguage === 'en' ? "Pax" : "Kishi"}</th>
+                    <th className="py-3 px-3 text-right">{t('finPrice')}</th>
+                    <th className="py-3 px-3">{t('finPaymentMethod')}</th>
+                    <th className="py-3 px-3">{t('finStatus')}</th>
+                    <th className="py-3 px-3 text-center">{t('finActions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {orders
+                    .filter(o => {
+                      const q = financeSearch.toLowerCase();
+                      return (
+                        o.customerName?.toLowerCase().includes(q) ||
+                        o.passportNumber?.toLowerCase().includes(q) ||
+                        o.phone?.toLowerCase().includes(q) ||
+                        o.tourTitle?.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((ord, idx) => {
+                      const isPaid = ord.paymentStatus === 'paid';
+                      return (
+                        <tr key={ord.id} className="hover:bg-slate-800/40 transition">
+                          <td className="py-3 px-3 font-mono text-slate-500">{idx + 1}</td>
+                          <td className="py-3 px-3 font-bold text-white whitespace-nowrap">
+                            {ord.customerName}
+                          </td>
+                          <td className="py-3 px-3 font-mono text-blue-300 whitespace-nowrap">
+                            {ord.passportNumber}
+                          </td>
+                          <td className="py-3 px-3 font-mono text-emerald-300 whitespace-nowrap">
+                            {ord.phone}
+                          </td>
+                          <td className="py-3 px-3 max-w-[200px] truncate text-slate-200" title={ord.tourTitle}>
+                            {ord.tourTitle}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap font-mono text-[11px] text-slate-400">
+                            {ord.travelDate}
+                          </td>
+                          <td className="py-3 px-3 text-center font-bold text-white">
+                            {ord.travelersCount || 1}
+                          </td>
+                          <td className="py-3 px-3 text-right font-black text-white whitespace-nowrap">
+                            ${ord.totalPrice}
+                          </td>
+                          <td className="py-3 px-3 uppercase text-[10px] font-bold text-slate-300">
+                            {ord.paymentMethod}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              isPaid ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                            }`}>
+                              {isPaid ? (effectiveLanguage === 'ru' ? "Оплачено" : effectiveLanguage === 'en' ? "Paid" : "To'langan") : (effectiveLanguage === 'ru' ? "В ожидании" : effectiveLanguage === 'en' ? "Pending" : "Kutilmoqda")}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <button
+                              onClick={() => onViewVoucher(ord)}
+                              className="px-2 py-1 bg-slate-800 hover:bg-blue-600/30 text-blue-400 hover:text-white rounded-lg text-[10px] font-bold transition"
+                            >
+                              Vaucher
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* SECTION 2: AGENTLIK XARAJATLARI VA CHIQIMLAR (EXPENSES TABLE) */}
+          <div className="bg-slate-900/90 rounded-3xl border border-slate-800 p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <h4 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <span>{t('finExpensesTitle')}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold font-mono">
+                    ${financials.totalExpenses.toLocaleString()}
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {effectiveLanguage === 'ru' 
+                    ? "Все статьи затрат агентства: чартерные рейсы, отели, маркетинг, страховки и аренда" 
+                    : effectiveLanguage === 'en'
+                    ? "All operational costs: flight blocks, hotel deposits, marketing, insurance, and office"
+                    : "Aviachiptalar depoziti, xalqaro mehmonxona to'lovlari, sug'urta va reklama xarajatlari"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAddExpenseModal(true)}
+                className="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition active:scale-95 shrink-0"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>{t('finAddExpense')}</span>
+              </button>
+            </div>
+
+            {/* Expenses Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-950/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-3">№</th>
+                    <th className="py-3 px-3">{t('finExpenseName')}</th>
+                    <th className="py-3 px-3">{t('finExpenseCat')}</th>
+                    <th className="py-3 px-3 text-right">{t('finExpenseAmount')}</th>
+                    <th className="py-3 px-3">{t('finExpenseDate')}</th>
+                    <th className="py-3 px-3">{t('finExpenseNotes')}</th>
+                    <th className="py-3 px-3 text-center">{t('finActions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {expenses.map((exp, idx) => (
+                    <tr key={exp.id} className="hover:bg-slate-800/40 transition">
+                      <td className="py-3 px-3 font-mono text-slate-500">{idx + 1}</td>
+                      <td className="py-3 px-3 font-bold text-white">
+                        {exp.title}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-teal-300 text-[10px] font-semibold">
+                          {exp.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right font-black text-rose-400 whitespace-nowrap">
+                        -${exp.amount?.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                        {exp.date}
+                      </td>
+                      <td className="py-3 px-3 text-slate-400 text-xs max-w-xs truncate">
+                        {exp.notes || '-'}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <button
+                          onClick={() => handleDeleteExpense(exp.id)}
+                          className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition"
+                          title="Xarajatni o'chirish"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD EXPENSE MODAL */}
+      {showAddExpenseModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 w-full max-w-md space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h4 className="text-base font-bold text-white flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-teal-400" />
+                <span>{t('finAddExpense')}</span>
+              </h4>
+              <button
+                onClick={() => setShowAddExpenseModal(false)}
+                className="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddExpenseSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">{t('finExpenseName')}:</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Masalan: FlyDubai charter reyslari to'lovi"
+                  value={newExpense.title}
+                  onChange={(e) => setNewExpense({ ...newExpense, title: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">{t('finExpenseCat')}:</label>
+                  <select
+                    value={newExpense.category}
+                    onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                  >
+                    <option value="Aviachiptalar">Aviachiptalar</option>
+                    <option value="Mehmonxona">Mehmonxona</option>
+                    <option value="Sug'urta">Sug'urta</option>
+                    <option value="Marketing">Marketing / Ads</option>
+                    <option value="Operatsion">Operatsion / Ofis</option>
+                    <option value="Viza">Viza xizmatlari</option>
+                    <option value="Boshqa">Boshqa xarajat</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">{t('finExpenseAmount')}:</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="3500"
+                    value={newExpense.amount}
+                    onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">{t('finExpenseDate')}:</label>
+                <input
+                  type="date"
+                  required
+                  value={newExpense.date}
+                  onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">{t('finExpenseNotes')}:</label>
+                <textarea
+                  rows="2"
+                  placeholder="Qo'shimcha tafsilotlar yoki shartnoma raqami..."
+                  value={newExpense.notes}
+                  onChange={(e) => setNewExpense({ ...newExpense, notes: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-teal-500"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddExpenseModal(false)}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
+                >
+                  {t('finCancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition active:scale-95"
+                >
+                  {t('finSaveExpense')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'feedbacks' && (
         <div className="space-y-4">
           <div className="bg-amber-950/20 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">

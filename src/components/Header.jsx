@@ -1,5 +1,5 @@
 import React from 'react';
-import { PhoneCall, User, LogOut, Crown, LogIn, Send } from 'lucide-react';
+import { PhoneCall, User, LogOut, Crown, LogIn, Send, Bot, Sparkles } from 'lucide-react';
 import { isUserAdmin } from '../services/auth';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSelector from './LanguageSelector';
@@ -8,7 +8,8 @@ export default function Header({
   onOpenContact, 
   currentUser,
   onOpenAuth,
-  onLogout
+  onLogout,
+  onOpenAi
 }) {
   const isAdmin = isUserAdmin(currentUser);
   const { t } = useLanguage();
@@ -130,6 +131,17 @@ export default function Header({
           <div className="hidden sm:block">
             <LanguageSelector compact={false} />
           </div>
+
+          {/* Gemini AI Bot Button */}
+          <button
+            onClick={onOpenAi}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl shadow-md shadow-violet-600/30 transition active:scale-95 border border-violet-400/30"
+            title={t('aiAssistantTitle')}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+            <span className="hidden xs:inline">{t('aiAssistantButton')}</span>
+            <span className="xs:hidden">AI</span>
+          </button>
 
           {/* Telegram Lichka button */}
           <a

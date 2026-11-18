@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minRequiredVersion": "1.0.0",
-  "releaseDate": "2026-11-17",
-  "title": "USMWORLD Yangi Versiyasi Mavjud!",
-  "description": "50+ xalqaro tur paketlari, to'lov tizimlari va xavfsizlik yangilanishi.",
+  "releaseDate": "2026-11-18",
+  "title": "USMWORLD Yangi Versiyasi (1.0.1)",
+  "description": "Rasmiy sertifikatlangan xavfsiz reliz, Kirim-Chiqim hisobotlari va Gemini AI yordamchisi.",
   "apkUrl": "/USMWORLD.apk",
   "forceUpdate": false
 }

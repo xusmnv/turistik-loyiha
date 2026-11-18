@@ -14,7 +14,13 @@ export default function BottomNav({ activeTab, setActiveTab, ordersCount = 0 }) 
   ];
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800/80 px-2 py-1.5 max-w-lg mx-auto md:max-w-md shadow-2xl">
+    <nav 
+      className="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800/80 px-2 max-w-lg mx-auto md:max-w-md shadow-2xl transition-all"
+      style={{
+        paddingTop: '7px',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)'
+      }}
+    >
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;

@@ -19,6 +19,7 @@ import MobileFrame from './components/MobileFrame';
 import UpdateNotificationModal from './components/UpdateNotificationModal';
 import AIAssistantModal from './components/AIAssistantModal';
 import AIAssistantFloatingButton from './components/AIAssistantFloatingButton';
+import OfflineModal from './components/OfflineModal';
 
 import { getTours, getOrders, initializeDB } from './services/db';
 import { getCurrentUser, logoutUser, isUserAdmin } from './services/auth';
@@ -112,7 +113,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <div className="flex flex-col min-h-full bg-slate-950 text-slate-100 pb-20 selection:bg-blue-600 selection:text-white">
+      <div className="flex flex-col min-h-full bg-slate-950 text-slate-100 pb-32 sm:pb-28 selection:bg-blue-600 selection:text-white">
         
         {/* Main Header with User state */}
         <Header 
@@ -557,6 +558,9 @@ export default function App() {
 
         {/* In-App Auto Update Checker Modal */}
         <UpdateNotificationModal />
+
+        {/* Global Offline Network Guard Modal */}
+        <OfflineModal />
 
         {/* Gemini AI Bot Floating Button & Assistant Modal */}
         <AIAssistantFloatingButton onClick={() => setShowAiModal(true)} />

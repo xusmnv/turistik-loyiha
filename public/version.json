@@ -1,9 +1,9 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "minRequiredVersion": "1.0.0",
   "releaseDate": "2026-11-18",
-  "title": "USMWORLD Yangi Versiyasi (1.0.1)",
-  "description": "Rasmiy sertifikatlangan xavfsiz reliz, Kirim-Chiqim hisobotlari va Gemini AI yordamchisi.",
+  "title": "USMWORLD Yangi Versiyasi (1.0.2)",
+  "description": "Ekran moslashuvi, Jonli doira Face ID kamerasi, Ofline rejim va Suzuvchi AI Robot.",
   "apkUrl": "/USMWORLD.apk",
   "forceUpdate": false
 }
